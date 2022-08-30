@@ -85,29 +85,29 @@ public_pem = public_key.public_bytes(
 with open('alice_public_key.pem', 'wb') as f:
     f.write(public_pem)
 
-# get alice public key filename and size
-alice_public_key_filename = "alice_public_key.pem"
-alice_public_filesize = os.path.getsize(alice_public_key_filename)
-
-# send alice public key filename and size
-s.send(f"{alice_public_key_filename}{SEPARATOR}{filesize}".encode())
-
-# start sending alice public key
-progress = tqdm.tqdm(range(alice_public_filesize), f"Sending {alice_public_key_filename}", unit="B", unit_scale=True, unit_divisor=1024)
-with open(alice_public_key_filename, "rb") as f:
-    while True:
-        # read the bytes from alice's key
-        bytes_read = f.read(BUFFER_SIZE)
-        if not bytes_read:
-            # alice key's transmitting is done
-            break
-        # we use sendall to assure transimission in 
-        # busy networks
-        s.sendall(bytes_read)
-        # update the progress bar
-        progress.update(len(bytes_read))
-        
-# close the client socket
-client_socket.close()
+# # get alice public key filename and size
+# alice_public_key_filename = "alice_public_key.pem"
+# alice_public_filesize = os.path.getsize(alice_public_key_filename)
+#
+# # send alice public key filename and size
+# s.send(f"{alice_public_key_filename}{SEPARATOR}{filesize}".encode())
+#
+# # start sending alice public key
+# progress = tqdm.tqdm(range(alice_public_filesize), f"Sending {alice_public_key_filename}", unit="B", unit_scale=True, unit_divisor=1024)
+# with open(alice_public_key_filename, "rb") as f:
+#     while True:
+#         # read the bytes from alice's key
+#         bytes_read = f.read(BUFFER_SIZE)
+#         if not bytes_read:
+#             # alice key's transmitting is done
+#             break
+#         # we use sendall to assure transimission in 
+#         # busy networks
+#         s.sendall(bytes_read)
+#         # update the progress bar
+#         progress.update(len(bytes_read))
+#         
+# # close the client socket
+# client_socket.close()
 # close the server socket
 s.close()

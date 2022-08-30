@@ -76,30 +76,30 @@ with open(bob_public_key_filename, "rb") as f:
         # update the progress bar
         progress.update(len(bytes_read))
 
-# receive alice key file infos
-# receive using client socket, not server socket
-received = client_socket.recv(BUFFER_SIZE).decode()
-alice_public_key_filename, alice_public_key_filesize = received.split(SEPARATOR)
-# remove absolute path if there is
-alice_public_key_filename = os.path.basename(alice_public_key_filename)
-# convert to integer
-alice_public_key_filesize = int(alice_public_key_filesize)
-
-# start receiving alice key file from the socket
-# and writing to the file stream
-progress = tqdm.tqdm(range(alice_public_key_filesize), f"Receiving {alice_public_key_filename}", unit="B", unit_scale=True, unit_divisor=1024)
-with open(alice_public_key_filename, "wb") as f:
-    while True:
-        # read 1024 bytes from the socket (receive)
-        bytes_read = client_socket.recv(BUFFER_SIZE)
-        if not bytes_read:
-            # nothing is received
-            # alice's key file transmitting is done
-            break
-        # write to alice key file the bytes we just received
-        f.write(bytes_read)
-        # update the progress bar
-        progress.update(len(bytes_read))
+# # receive alice key file infos
+# # receive using client socket, not server socket
+# received = client_socket.recv(BUFFER_SIZE).decode()
+# alice_public_key_filename, alice_public_key_filesize = received.split(SEPARATOR)
+# # remove absolute path if there is
+# alice_public_key_filename = os.path.basename(alice_public_key_filename)
+# # convert to integer
+# alice_public_key_filesize = int(alice_public_key_filesize)
+#
+# # start receiving alice key file from the socket
+# # and writing to the file stream
+# progress = tqdm.tqdm(range(alice_public_key_filesize), f"Receiving {alice_public_key_filename}", unit="B", unit_scale=True, unit_divisor=1024)
+# with open(alice_public_key_filename, "wb") as f:
+#     while True:
+#         # read 1024 bytes from the socket (receive)
+#         bytes_read = client_socket.recv(BUFFER_SIZE)
+#         if not bytes_read:
+#             # nothing is received
+#             # alice's key file transmitting is done
+#             break
+#         # write to alice key file the bytes we just received
+#         f.write(bytes_read)
+#         # update the progress bar
+#         progress.update(len(bytes_read))
 
 # # send the filename and filesize
 # s.send(f"{filename}{SEPARATOR}{filesize}".encode())
