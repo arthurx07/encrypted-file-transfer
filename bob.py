@@ -117,6 +117,7 @@ alice_public_key_filename = os.path.basename(alice_public_key_filename)
 # convert to integer
 print(alice_public_key_filesize)
 print(alice_public_key_filename)
+head, sep, tail = alice_public_key_filesize.partition('-')
 alice_public_key_filesize = int(alice_public_key_filesize)
 print(alice_public_key_filesize)
 

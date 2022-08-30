@@ -46,6 +46,8 @@ bob_public_key_filename = os.path.basename(bob_public_key_filename)
 # convert to integer
 print(bob_public_key_filesize)
 print(bob_public_key_filename)
+head, sep, tail = bob_public_key_filesize.partition('-')
+print(bob_public_key_filesize)
 bob_public_key_filesize = int(bob_public_key_filesize)
 print(bob_public_key_filesize)
 
