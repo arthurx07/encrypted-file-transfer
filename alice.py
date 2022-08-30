@@ -140,6 +140,8 @@ with open(alice_public_key_filename, "rb") as f:
         # update the progress bar
         progress.update(len(bytes_read))
 
+time.sleep(5)
+
 ### alice generates a random session key
 
 

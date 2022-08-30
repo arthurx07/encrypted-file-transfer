@@ -138,6 +138,8 @@ with open(alice_public_key_filename, "wb") as f:
         # update the progress bar
         progress.update(len(bytes_read))
 
+time.sleep(5)
+
 ###### bob receives alice's hash
 
 
