@@ -33,19 +33,19 @@ client_socket, address = s.accept()
 # if below code is executed, that means the sender is connected
 print(f"[+] {address} is connected.")
 
-# receive the file infos
+# receive bob key file infos
 # receive using client socket, not server socket
 received = client_socket.recv(BUFFER_SIZE).decode()
-filename, filesize = received.split(SEPARATOR)
+bob_public_key_filename, bob_public_key_filesize = received.split(SEPARATOR)
 # remove absolute path if there is
-filename = os.path.basename(filename)
+bob_public_key_filename = os.path.basename(bob_public_key_filename)
 # convert to integer
-filesize = int(filesize)
+bob_public_key_filesize = int(bob_public_key_filesize)
 
-# start receiving the file from the socket
+# start receiving bob key file from the socket
 # and writing to the file stream
-progress = tqdm.tqdm(range(filesize), f"Receiving {filename}", unit="B", unit_scale=True, unit_divisor=1024)
-with open(filename, "wb") as f:
+progress = tqdm.tqdm(range(bob_public_key_filesize), f"Receiving {bob_public_key_filename}", unit="B", unit_scale=True, unit_divisor=1024)
+with open(bob_public_key_filename, "wb") as f:
     while True:
         # read 1024 bytes from the socket (receive)
         bytes_read = client_socket.recv(BUFFER_SIZE)
@@ -53,8 +53,57 @@ with open(filename, "wb") as f:
             # nothing is received
             # file transmitting is done
             break
-        # write to the file the bytes we just received
+        # write to bob key file the bytes we just received
         f.write(bytes_read)
+        # update the progress bar
+        progress.update(len(bytes_read))
+
+# Generating alice key
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives.asymmetric import rsa
+private_key = rsa.generate_private_key(
+    public_exponent=65537,
+    key_size=2048,
+    backend=default_backend()
+    )
+public_key = private_key.public_key()
+
+# Storing alice's keys
+from cryptography.hazmat.primitives import serialization
+private_pem = private_key.private_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PrivateFormat.PKCS8,
+    encryption_algorithm=serialization.NoEncryption()
+    )
+with open('alice_private_key.pem', 'wb') as f:
+    f.write(private_pem)
+
+public_pem = public_key.public_bytes(
+    encoding=serialization.Encoding.PEM,
+    format=serialization.PublicFormat.SubjectPublicKeyInfo
+    )
+with open('alice_public_key.pem', 'wb') as f:
+    f.write(public_pem)
+
+# get alice public key filename and size
+alice_public_key_filename = "alice_public_key.pem"
+alice_public_filesize = os.path.getsize(alice_public_key_filename)
+
+# send alice public key filename and size
+s.send(f"{alice_public_key_filename}{SEPARATOR}{filesize}".encode())
+
+# start sending alice public key
+progress = tqdm.tqdm(range(alice_public_filesize), f"Sending {alice_public_key_filename}", unit="B", unit_scale=True, unit_divisor=1024)
+with open(alice_public_key_filename, "rb") as f:
+    while True:
+        # read the bytes from alice's key
+        bytes_read = f.read(BUFFER_SIZE)
+        if not bytes_read:
+            # alice key's transmitting is done
+            break
+        # we use sendall to assure transimission in 
+        # busy networks
+        s.sendall(bytes_read)
         # update the progress bar
         progress.update(len(bytes_read))
         
