@@ -12,6 +12,7 @@ def utf8(s: bytes):
 # send/receive 4096 bytes each time
 BUFFER_SIZE = 4096
 SEPARATOR = "<SEPARATOR>"
+FILE = input("Enter file to encrypt: ")
 
 ###################### alice receives bob public key
 
@@ -143,8 +144,29 @@ with open(alice_public_key_filename, "rb") as f:
 time.sleep(5)
 
 ### alice generates a random session key
+from cryptography.fernet import Fernet
 
+# Generate skc key and save into file
+key = Fernet.generate_key()
+with open("key.key", "wb") as key_file:
+    key_file.write(key)
 
+### alice generates hash from file
+# divide files in chunks, to not use a lot of ram for big files
+# BUF_SIZE is totally arbitrary, change for your app!
+BUF_SIZE = 65536 # lets read stuff in 64kb chunks!
+
+blake2 = blake2b()
+
+with open(FILE, 'rb') as f:
+    while True:
+        data = f.read(BUF_SIZE)
+        if not data:
+            break
+        blake2.update(data)
+
+HASH = "{0}".format(blake2.hexdigest())
+print(HASH)
  
 ##############
 # close the socket
