@@ -115,12 +115,8 @@ alice_public_key_filename, alice_public_key_filesize = received.split(SEPARATOR)
 # remove absolute path if there is
 alice_public_key_filename = os.path.basename(alice_public_key_filename)
 # convert to integer
-print(alice_public_key_filesize)
-print(alice_public_key_filename)
 alice_public_key_filesize, sep, tail = alice_public_key_filesize.partition('-')
-print(alice_public_key_filesize)
 alice_public_key_filesize = int(alice_public_key_filesize)
-print(alice_public_key_filesize)
 
 # start receiving alice key file from the socket
 # and writing to the file stream
