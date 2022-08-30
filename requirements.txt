@@ -1,0 +1,2 @@
+pip install tqdm
+pip install cryptography
