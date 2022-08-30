@@ -8,21 +8,25 @@ import base64 # for base64 encoding
 def utf8(s: bytes):
     return str(s, 'utf-8')
 
+# send/receive 4096 bytes each time
+BUFFER_SIZE = 4096
 SEPARATOR = "<SEPARATOR>"
-BUFFER_SIZE = 4096 # send 4096 bytes each time step
 
+########################################################################################
+# sender 
 # the ip address or hostname of the server, the receiver
-host = input("Enter server ip: ")
+host = "192.168.1.144"
 # the port, let's use 5001
 port = 5001
 # the name of file we want to send, make sure it exists
-filename = input("Enter filename: ")
+#filename = input("Enter filename: ")
 # get the file size
-filesize = os.path.getsize(filename)
+#filesize = os.path.getsize(filename)
 
 # create the client socket
 s = socket.socket()
 
+# connect to receiver
 print(f"[+] Connecting to {host}:{port} ... ")
 s.connect((host, port))
 print("[+] Connected.")
@@ -76,6 +80,34 @@ with open(bob_public_key_filename, "rb") as f:
         # update the progress bar
         progress.update(len(bytes_read))
 
+# close the socket
+s.close()
+
+##########################################################################################
+# receiver
+
+# device's IP address
+SERVER_HOST = "0.0.0.0" #means all ipv4 addresses that are on the local machine
+SERVER_PORT = 5001
+
+# create the server socket
+# TCP socket
+s = socket.socket()
+
+# bind the socket to our local address
+s.bind((SERVER_HOST, SERVER_PORT))
+
+# enabling our server to accept connections
+# 1 here is the number of accepted connections that
+# the system will allow before refusing new connections
+s.listen(1)
+print(f"[*] Listening as {SERVER_HOST}:{SERVER_PORT}")
+
+# accept connection if there is any
+client_socket, address = s.accept() 
+# if below code is executed, that means the sender is connected
+print(f"[+] {address} is connected.")
+
 # receive alice key file infos
 # receive using client socket, not server socket
 received = client_socket.recv(BUFFER_SIZE).decode()
@@ -101,6 +133,11 @@ with open(alice_public_key_filename, "wb") as f:
         # update the progress bar
         progress.update(len(bytes_read))
 
+# close the client socket
+client_socket.close()
+# close the server socket
+s.close()
+
 # # send the filename and filesize
 # s.send(f"{filename}{SEPARATOR}{filesize}".encode())
 # #encode() function encodes the string we passed to 'utf-8' encoding (that's necessary).
@@ -119,6 +156,6 @@ with open(alice_public_key_filename, "wb") as f:
 #         s.sendall(bytes_read)
 #         # update the progress bar
 #         progress.update(len(bytes_read))
-# close the socket
-s.close()
+# close the server socket
+# s.close()
 
