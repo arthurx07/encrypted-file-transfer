@@ -1,3 +1,5 @@
+#!/bin/env python
+
 import socket
 import tqdm #for progress bar
 import os
