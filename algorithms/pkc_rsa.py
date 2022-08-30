@@ -21,14 +21,14 @@ private_pem = private_key.private_bytes(
     format=serialization.PrivateFormat.PKCS8,
     encryption_algorithm=serialization.NoEncryption()
     )
-with open('private_key.pem', 'wb') as f:
+with open('bob_private_key.pem', 'wb') as f:
     f.write(private_pem)
 
 public_pem = public_key.public_bytes(
     encoding=serialization.Encoding.PEM,
     format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
-with open('public_key.pem', 'wb') as f:
+with open('bob_public_key.pem', 'wb') as f:
     f.write(public_pem)
 
 # Reading the keys back in (for demonstration purposes)

@@ -1,8 +1,13 @@
 #!/bin/env python
 
 import socket
-import tqdm #for progress bar
+import tqdm # for progress bar
 import os
+
+import base64 # for base64 encoding
+def utf8(s: bytes):
+    return str(s, 'utf-8')
+
 # device's IP address
 SERVER_HOST = "0.0.0.0" #means all ipv4 addresses that are on the local machine
 SERVER_PORT = 5001
@@ -18,9 +23,9 @@ s = socket.socket()
 s.bind((SERVER_HOST, SERVER_PORT))
 
 # enabling our server to accept connections
-# 1 here is the number of unaccepted connections that
+# 1 here is the number of accepted connections that
 # the system will allow before refusing new connections
-s.listen(1)#??
+s.listen(1)
 print(f"[*] Listening as {SERVER_HOST}:{SERVER_PORT}")
 
 # accept connection if there is any
