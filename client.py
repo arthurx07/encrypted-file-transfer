@@ -55,7 +55,7 @@ with open('bob_public_key.pem', 'wb') as f:
     f.write(public_pem)
 
 bob_public_keyfile = "bob_public_key.pem"
-bob_public_filesize = os.path.getsize(bob_public_filename)
+bob_public_filesize = os.path.getsize(bob_public_keyfile)
 
 # send bob public key filename and size
 s.send(f"{bob_public_keyfile}{SEPARATOR}{filesize}".encode())
