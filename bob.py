@@ -3,6 +3,7 @@
 import socket
 import tqdm # for progress bar
 import os
+import time
 
 import base64 # for base64 encoding
 def utf8(s: bytes):
@@ -80,68 +81,69 @@ with open(bob_public_key_filename, "rb") as f:
         # update the progress bar
         progress.update(len(bytes_read))
 
+time.sleep(5)
+
 # close the socket
 s.close()
 
-# ###### bob establishes a connection with alice as a receiver
-#
-# # device's IP address
-# SERVER_HOST = "0.0.0.0" #means all ipv4 addresses that are on the local machine
-# SERVER_PORT = 5001
-#
-# # create the server socket
-# # TCP socket
-# s = socket.socket()
-#
-# # bind the socket to our local address
-# s.bind((SERVER_HOST, SERVER_PORT))
-#
-# # enabling our server to accept connections
-# # 1 here is the number of accepted connections that
-# # the system will allow before refusing new connections
-# s.listen(1)
-# print(f"[*] Listening as {SERVER_HOST}:{SERVER_PORT}")
-#
-# # accept connection if there is any
-# client_socket, address = s.accept() 
-# # if below code is executed, that means the sender is connected
-# print(f"[+] {address} is connected.")
-#
-# ##### bob receives alice's public key
-#
-# # receive alice key file infos
-# # receive using client socket, not server socket
-# received = client_socket.recv(BUFFER_SIZE).decode()
-# alice_public_key_filename, alice_public_key_filesize = received.split(SEPARATOR)
-# # remove absolute path if there is
-# alice_public_key_filename = os.path.basename(alice_public_key_filename)
-# # convert to integer
-# alice_public_key_filesize, sep, tail = alice_public_key_filesize.partition('-')
-# alice_public_key_filesize = int(alice_public_key_filesize)
-#
-# # start receiving alice key file from the socket
-# # and writing to the file stream
-# progress = tqdm.tqdm(range(alice_public_key_filesize), f"Receiving {alice_public_key_filename}", unit="B", unit_scale=True, unit_divisor=1024)
-# with open(alice_public_key_filename, "wb") as f:
-#     while True:
-#         # read 1024 bytes from the socket (receive)
-#         bytes_read = client_socket.recv(BUFFER_SIZE)
-#         if not bytes_read:
-#             # nothing is received
-#             # alice's key file transmitting is done
-#             break
-#         # write to alice key file the bytes we just received
-#         f.write(bytes_read)
-#         # update the progress bar
-#         progress.update(len(bytes_read))
-#
-# ###### bob receives alice's hash
-#
-#
-#
-# ##################
-# # close the client socket
-# client_socket.close()
-# # close the server socket
-# s.close()
-#
+###### bob establishes a connection with alice as a receiver
+
+# device's IP address
+SERVER_HOST = "0.0.0.0" #means all ipv4 addresses that are on the local machine
+SERVER_PORT = 5001
+
+# create the server socket
+# TCP socket
+s = socket.socket()
+
+# bind the socket to our local address
+s.bind((SERVER_HOST, SERVER_PORT))
+
+# enabling our server to accept connections
+# 1 here is the number of accepted connections that
+# the system will allow before refusing new connections
+s.listen(1)
+print(f"[*] Listening as {SERVER_HOST}:{SERVER_PORT}")
+
+# accept connection if there is any
+client_socket, address = s.accept()
+# if below code is executed, that means the sender is connected
+print(f"[+] {address} is connected.")
+
+##### bob receives alice's public key
+
+# receive alice key file infos
+# receive using client socket, not server socket
+received = client_socket.recv(BUFFER_SIZE).decode()
+alice_public_key_filename, alice_public_key_filesize = received.split(SEPARATOR)
+# remove absolute path if there is
+alice_public_key_filename = os.path.basename(alice_public_key_filename)
+# convert to integer
+alice_public_key_filesize, sep, tail = alice_public_key_filesize.partition('-')
+alice_public_key_filesize = int(alice_public_key_filesize)
+
+# start receiving alice key file from the socket
+# and writing to the file stream
+progress = tqdm.tqdm(range(alice_public_key_filesize), f"Receiving {alice_public_key_filename}", unit="B", unit_scale=True, unit_divisor=1024)
+with open(alice_public_key_filename, "wb") as f:
+    while True:
+        # read 1024 bytes from the socket (receive)
+        bytes_read = client_socket.recv(BUFFER_SIZE)
+        if not bytes_read:
+            # nothing is received
+            # alice's key file transmitting is done
+            break
+        # write to alice key file the bytes we just received
+        f.write(bytes_read)
+        # update the progress bar
+        progress.update(len(bytes_read))
+
+###### bob receives alice's hash
+
+
+
+##################
+# close the client socket
+client_socket.close()
+# close the server socket
+s.close()
