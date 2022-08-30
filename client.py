@@ -56,13 +56,13 @@ with open('bob_public_key.pem', 'wb') as f:
 
 # get bob public key filename and size
 bob_public_key_filename = "bob_public_key.pem"
-bob_public_filesize = os.path.getsize(bob_public_key_filename)
+bob_public_key_filesize = os.path.getsize(bob_public_key_filename)
 
 # send bob public key filename and size
-s.send(f"{bob_public_key_filename}{SEPARATOR}{filesize}".encode())
+s.send(f"{bob_public_key_filename}{SEPARATOR}{bob_public_key_filesize}".encode())
 
 # start sending bob public key
-progress = tqdm.tqdm(range(bob_public_filesize), f"Sending {bob_public_key_filename}", unit="B", unit_scale=True, unit_divisor=1024)
+progress = tqdm.tqdm(range(bob_public_key_filesize), f"Sending {bob_public_key_filename}", unit="B", unit_scale=True, unit_divisor=1024)
 with open(bob_public_key_filename, "rb") as f:
     while True:
         # read the bytes from bob's public key 
