@@ -140,9 +140,79 @@ with open(alice_public_key_filename, "wb") as f:
 
 time.sleep(5)
 
-###### bob receives alice's hash
+###### bob receives alice's hash, file, session key
+
+###### bob decrypts session key w/ bob private key
+# Load bob private key
+with open("bob_private_key.pem", "rb") as key_file:
+    private_key = serialization.load_pem_private_key(
+        key_file.read(),
+        password=None,
+        backend=default_backend()
+    )
+
+# Decrypt file
+with open("key.encrypted", "rb") as f:
+    for encrypted in f:
+        decrypted = private_key.decrypt(
+            encrypted,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
+            )
+        )
+
+        with open('key.key', "ab") as f: f.write(decrypted)
 
 
+###### bob decrypts file w/ session key
+# Loads the key from the current directory named `key.key`
+def load_key():
+    return open("key.key", "rb").read()
+key = load_key()
+
+# Given a filename (str) and key (bytes), it decripts the file and write it
+f = Fernet(key)
+    with open(FILE, "rb") as file:
+        # read the encrypted data
+        encrypted_data = file.read()
+    # decrypt data
+    decrypted_data = f.decrypt(encrypted_data)
+    # write the original file
+    FILE = FILE.removesuffix('.encrypted')    # Returns original FILE name
+    with open(FILE, "wb") as file:
+        file.write(decrypted_data)
+
+###### bob verificates file (decrypts hash, generates hash from file, compares)
+import cryptography.exceptions
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+
+# Load the public key.
+with open('alice_public_key.pem', 'rb') as f:
+    public_key = load_pem_public_key(f.read(), default_backend())
+
+# Load the payload contents and the signature.
+with open(FILE, 'rb') as f:
+    payload_contents = f.read()
+with open(FILE + ".sig", 'rb') as f:
+    signature = base64.b64decode(f.read())
+
+# Perform the verification.
+try:
+    public_key.verify(
+        signature,
+        payload_contents,
+        padding.PSS(
+            mgf = padding.MGF1(hashes.SHA256()),
+            salt_length = padding.PSS.MAX_LENGTH,
+        ),
+        hashes.SHA256(),
+    )
+except cryptography.exceptions.InvalidSignature as e:
+    print('ERROR: Payload and/or signature files failed verification!')
 
 ##################
 # close the client socket

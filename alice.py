@@ -174,7 +174,7 @@ hash_file = open(FILE + ".blake2b", "w")
 n = hash_file.write(HASH)
 hash_file.close()
 
-##### alice encrypts hash w/ alice private key
+##### alice encrypts hash w/ alice private key (signs file)
 
 # Load alice private key
 from cryptography.hazmat.backends import default_backend
