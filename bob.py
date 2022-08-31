@@ -80,6 +80,7 @@ with open(bob_public_key_filename, "rb") as f:
         s.sendall(bytes_read)
         # update the progress bar
         progress.update(len(bytes_read))
+f.close()
 
 # close the socket
 s.close()
@@ -137,6 +138,7 @@ with open(alice_public_key_filename, "wb") as f:
         f.write(bytes_read)
         # update the progress bar
         progress.update(len(bytes_read))
+f.close()
 
 # close the client socket
 client_socket.close()
