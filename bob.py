@@ -71,7 +71,7 @@ time.sleep(5)
 
 client.download("key.encrypted", "key.encrypted")
 
-print("[*] Downloaded {{}.sig}, {{}.encrypted}, {key.encrypted}".format(FILE, FILE))
+print("[*] Downloaded {{{}.sig}}, {{{}.encrypted}}, {{key.encrypted}}".format(FILE, FILE))
 
 ################## bob decrypts session key w/ bob private key
 # Load bob private key
@@ -119,7 +119,7 @@ with open(FILE + ".encrypted", "rb") as file:
     # read the encrypted data
     encrypted_data = file.read()
 
-print("[*] Loaded {{}.encrypted}".format(FILE))
+print("[*] Loaded {{{}.encrypted}}".format(FILE))
 
 # decrypt data
 decrypted_data = f.decrypt(encrypted_data)
@@ -172,7 +172,7 @@ with open(FILE + ".blake2b", 'rb') as f:
 with open(FILE + ".sig", 'rb') as f:
     signature = base64.b64decode(f.read())
 
-print("[*] Loaded {{}.blake2b} and {{}.sig}".format(FILE, FILE))
+print("[*] Loaded {{{}.blake2b}} and {{{}.sig}}".format(FILE, FILE))
 
 # Perform the verification.
 try:

@@ -96,7 +96,7 @@ print("[*] Loaded {alice_private_key.pem}")
 with open(FILE + '.blake2b', 'rb') as f:
     payload = f.read()
 
-print("[*] Loaded {{}.blake2b}".format(FILE))
+print("[*] Loaded {{{}.blake2b}}".format(FILE))
 
 # Sign the payload file.
 from cryptography.hazmat.primitives import hashes
@@ -115,7 +115,7 @@ signature = base64.b64encode(
 with open(FILE + '.sig', 'wb') as f:
     f.write(signature)
 
-print("[*] {{}.blake2b} file signed with private key to {{}.sig}".format(FILE, FILE))
+print("[*] {{{}.blake2b}} file signed with private key to {{{}.sig}}".format(FILE, FILE))
 
 ########################## alice encrypts file w/ session key
 
@@ -147,7 +147,7 @@ print("[*] Received {bob_public_key.pem}")
 print("[*] Uploaded {alice_public_key.pem}")
 # script which waits 5 sec and encrypts session key w/ bob public key
 # os.system("python alice-encrypt-session-key.py")
-print("[*] {{}.sig}, {}.encrypted, {key.encrypted} sent to bob")
+print("[*] {{{}.sig}}, {{{}.encrypted}}, {{key.encrypted}} sent to bob".format(FILE, FILE))
 server.listen(SERVER_HOST, SERVER_PORT,.4)
 
 # here alice receives request to send alice public key, encrypted hash, file and session key
