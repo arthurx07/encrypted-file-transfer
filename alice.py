@@ -69,8 +69,7 @@ f.close()
 client_socket.close()
 # close the server socket
 s.close()
-
-time.sleep(5)
+print("test1")
 
 ########## alice establishes a connection with bob as the sender
 
@@ -145,8 +144,7 @@ f.close()
 
 # close the socket
 s.close()
-
-time.sleep(5)
+print("test")
 
 ############ alice generates a random session key
 from cryptography.fernet import Fernet
@@ -228,6 +226,12 @@ with open(FILE + ".encrypted", "wb") as file:
 ##### alice encrypts session key w/ bob public key
 
 # Load bob public key 
+while True:
+    if bob_public_key_filesize != os.path.getsize(bob_public_key_filename):
+        time.sleep(0.5)
+    else:
+        break
+
 with open("bob_public_key.pem", "rb") as key_file:
     public_key = serialization.load_pem_public_key(
         key_file.read(),

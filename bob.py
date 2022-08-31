@@ -85,10 +85,6 @@ f.close()
 # close the socket
 s.close()
 
-time.sleep(5)
-
-###### bob establishes a connection with alice as a receiver
-
 # device's IP address
 SERVER_HOST = "0.0.0.0" #means all ipv4 addresses that are on the local machine
 SERVER_PORT = 5001
@@ -144,8 +140,6 @@ f.close()
 client_socket.close()
 # close the server socket
 s.close()
-
-time.sleep(5)
 
 ################## bob receives alice's hash, file, session key
 
