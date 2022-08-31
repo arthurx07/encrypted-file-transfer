@@ -138,9 +138,12 @@ with open(alice_public_key_filename, "wb") as f:
         # update the progress bar
         progress.update(len(bytes_read))
 
-time.sleep(5)
+# close the client socket
+client_socket.close()
+# close the server socket
+s.close()
 
-###### bob receives alice's hash, file, session key
+################## bob receives alice's hash, file, session key
 
 ###### bob decrypts session key w/ bob private key
 # Load bob private key
@@ -215,7 +218,3 @@ except cryptography.exceptions.InvalidSignature as e:
     print('ERROR: Payload and/or signature files failed verification!')
 
 ##################
-# close the client socket
-client_socket.close()
-# close the server socket
-s.close()

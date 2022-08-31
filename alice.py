@@ -141,9 +141,10 @@ with open(alice_public_key_filename, "rb") as f:
         # update the progress bar
         progress.update(len(bytes_read))
 
-time.sleep(5)
+# close the socket
+s.close()
 
-### alice generates a random session key
+############ alice generates a random session key
 from cryptography.fernet import Fernet
 
 # Generate skc key and save into file
@@ -247,5 +248,3 @@ for encode in data:
 ##### alice sends encrypted hash, file, session key to bob
  
 ##############
-# close the socket
-s.close()
