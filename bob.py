@@ -3,6 +3,10 @@
 import tftpy
 import time
 
+import base64 # for base64 encoding
+def utf8(s: bytes):
+    return str(s, 'utf-8')
+
 ################### Generating bob's key
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -51,8 +55,6 @@ client.upload("bob_public_key.pem", "bob_public_key.pem")
 
 print("[*] Uploaded public key to alice")
 
-time.sleep(5)
-
 ################### bob receives alice's public key
 
 # initiates a tftp download from the configured remote host, requesting the filename passed
@@ -62,12 +64,14 @@ print("[*] Downloaded alice's public key")
 
 
 ################## bob receives alice's hash, file, session key
-FILE = "file"
+FILE = "ip-ampolla.txt"
 
 for name in (FILE + ".sig", FILE + ".encrypted"):
     client.download(name, name)
 
 print("[*] Downloaded encrypted file, hash")
+
+time.sleep(20)
 
 client.download("key.encrypted", "key.encrypted")
 
@@ -75,6 +79,7 @@ print("[*] Downloaded encrypted session key")
 
 ################## bob decrypts session key w/ bob private key
 # Load bob private key
+
 with open("bob_private_key.pem", "rb") as key_file:
     private_key = serialization.load_pem_private_key(
         key_file.read(),
@@ -85,6 +90,8 @@ with open("bob_private_key.pem", "rb") as key_file:
 print("[*] Loaded bob private key")
 
 # Decrypt file
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
 with open("key.encrypted", "rb") as f:
     for encrypted in f:
         decrypted = private_key.decrypt(
@@ -109,8 +116,10 @@ key = load_key()
 print("[*] Loaded session key from file key.key")
 
 # Given a filename (str) and key (bytes), it decripts the file and write it
+from cryptography.fernet import Fernet
+
 f = Fernet(key)
-with open(FILE, "rb") as file:
+with open(FILE + ".encrypted", "rb") as file:
     # read the encrypted data
     encrypted_data = file.read()
 # decrypt data
@@ -122,18 +131,44 @@ with open(FILE, "wb") as file:
 
 print("[*] File decrypted with session key")
 
+##### bob generates blake2b hash from file
+from hashlib import blake2b
+
+# divide files in chunks, to not use a lot of ram for big files
+# BUF_SIZE is totally arbitrary, change for your app!
+BUF_SIZE = 65536 # lets read stuff in 64kb chunks!
+
+blake2 = blake2b()
+
+with open(FILE, 'rb') as f:
+    while True:
+        data = f.read(BUF_SIZE)
+        if not data:
+            break
+        blake2.update(data)
+
+HASH = "{0}".format(blake2.hexdigest())
+
+# write hash to file
+hash_file = open(FILE + ".blake2b", "w")
+n = hash_file.write(HASH)
+hash_file.close()
+
+print("[*] Hash generated from file")
+
+
 ###### bob verificates file (decrypts hash, generates hash from file, compares)
 import cryptography.exceptions
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.serialization import load_pem_public_key
 
 # Load the public key.
 with open('alice_public_key.pem', 'rb') as f:
     public_key = load_pem_public_key(f.read(), default_backend())
 
+print("[*] Loaded alice public key")
+
 # Load the payload contents and the signature.
-with open(FILE, 'rb') as f:
+with open(FILE + ".blake2b", 'rb') as f:
     payload_contents = f.read()
 with open(FILE + ".sig", 'rb') as f:
     signature = base64.b64decode(f.read())
@@ -149,8 +184,7 @@ try:
         ),
         hashes.SHA256(),
     )
-    print("Verification succeeded")
+    print("[*] File verification succeeded")
 except cryptography.exceptions.InvalidSignature as e:
     print('ERROR: Payload and/or signature files failed verification!')
 
-##################

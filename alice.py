@@ -137,9 +137,9 @@ print("[*] Creating tftp server")
 server = tftpy.TftpServer('.')
 
 # script which waits 5 sec and encrypts session key w/ bob public key
-os.system("python alice-encrypt-session-key.py")
+# os.system("python alice-encrypt-session-key.py")
 
-print("Listening")
+print("[*] Listening")
 server.listen(SERVER_HOST, SERVER_PORT,.4)
 
 # here alice receives request to send alice public key, encrypted hash, file and session key
@@ -147,5 +147,5 @@ server.listen(SERVER_HOST, SERVER_PORT,.4)
 # print("Stop listening")
 # # ?????
 
-print("Close server")
+print("[*] Close server")
 server.stop()
