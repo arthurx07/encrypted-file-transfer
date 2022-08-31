@@ -177,15 +177,15 @@ key = load_key()
 
 # Given a filename (str) and key (bytes), it decripts the file and write it
 f = Fernet(key)
-    with open(FILE, "rb") as file:
-        # read the encrypted data
-        encrypted_data = file.read()
-    # decrypt data
-    decrypted_data = f.decrypt(encrypted_data)
-    # write the original file
-    FILE = FILE.removesuffix('.encrypted')    # Returns original FILE name
-    with open(FILE, "wb") as file:
-        file.write(decrypted_data)
+with open(FILE, "rb") as file:
+    # read the encrypted data
+    encrypted_data = file.read()
+# decrypt data
+decrypted_data = f.decrypt(encrypted_data)
+# write the original file
+FILE = FILE.removesuffix('.encrypted')    # Returns original FILE name
+with open(FILE, "wb") as file:
+    file.write(decrypted_data)
 
 ###### bob verificates file (decrypts hash, generates hash from file, compares)
 import cryptography.exceptions
