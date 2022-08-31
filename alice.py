@@ -136,46 +136,16 @@ print("[*] Creating tftp server")
 # create the server tftpy
 server = tftpy.TftpServer('.')
 
+# script which waits 5 sec and encrypts session key w/ bob public key
+os.system("python alice-encrypt-session-key.py")
+
 print("Listening")
 server.listen(SERVER_HOST, SERVER_PORT,.4)
 
-# here alice sends alice public key, encrypted hash and file
+# here alice receives request to send alice public key, encrypted hash, file and session key
 
-print("Stop listening")
-# ?????
-
-########################## alice encrypts session key w/ bob public key
-
-# Load bob public key 
-with open("bob_public_key.pem", "rb") as key_file:
-    public_key = serialization.load_pem_public_key(
-        key_file.read(),
-        backend=default_backend()
-    )
-
-# Encrypt key
-data = key
-open('key.encrypted', "wb").close() # clear file
-for encode in data:
-    encrypted = public_key.encrypt(
-        encode,
-        padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None
-        )
-    )
-    
-    with open('key.encrypted', "ab") as f: f.write(encrypted)
-
-print("[*] Session key encrypted with bob public key")
-
-######################### alice sends encrypted session key to bob
-print("Start listening again")
-server.listen(SERVER_HOST, SERVER_PORT)
-
-print("Stop listening")
-# ???
+# print("Stop listening")
+# # ?????
 
 print("Close server")
 server.stop()
