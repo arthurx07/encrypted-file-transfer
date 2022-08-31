@@ -10,7 +10,7 @@ def utf8(s: bytes):
 # the ip address or hostname of the server, the receiver
 HOST = input("Enter host ip: ")
 # the port, let's use 5001
-PORT = input("Enter port: ")
+PORT = int(input("Enter port: "))
 # file to request
 FILE = input("Enter file to request: ")
 
@@ -185,7 +185,7 @@ try:
         ),
         hashes.SHA256(),
     )
-    print("[*] {} verification succeeded".format(FILE))
+    print("[*] {{{}}} verification succeeded".format(FILE))
 except cryptography.exceptions.InvalidSignature as e:
     print('[X] ERROR: Payload and/or signature files failed verification!')
 
