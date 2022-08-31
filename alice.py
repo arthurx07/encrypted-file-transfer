@@ -148,7 +148,7 @@ print("[*] Uploaded {alice_public_key.pem}")
 # script which waits 5 sec and encrypts session key w/ bob public key
 # os.system("python alice-encrypt-session-key.py")
 print("[*] {{{}.sig}}, {{{}.encrypted}}, {{key.encrypted}} sent to bob".format(FILE, FILE))
-server.listen(SERVER_HOST, SERVER_PORT,.4)
+server.listen(SERVER_HOST, SERVER_PORT) # todo: stop server after sending all files
 
 # here alice receives request to send alice public key, encrypted hash, file and session key
 
