@@ -81,10 +81,10 @@ with open(bob_public_key_filename, "rb") as f:
         # update the progress bar
         progress.update(len(bytes_read))
 
-time.sleep(5)
-
 # close the socket
 s.close()
+
+time.sleep(5)
 
 ###### bob establishes a connection with alice as a receiver
 
@@ -142,6 +142,8 @@ with open(alice_public_key_filename, "wb") as f:
 client_socket.close()
 # close the server socket
 s.close()
+
+time.sleep(5)
 
 ################## bob receives alice's hash, file, session key
 

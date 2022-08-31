@@ -64,12 +64,12 @@ with open(bob_public_key_filename, "wb") as f:
         # update the progress bar
         progress.update(len(bytes_read))
 
-time.sleep(5)
-
 # close the client socket
 client_socket.close()
 # close the server socket
 s.close()
+
+time.sleep(5)
 
 ########## alice establishes a connection with bob as the sender
 
@@ -143,6 +143,8 @@ with open(alice_public_key_filename, "rb") as f:
 
 # close the socket
 s.close()
+
+time.sleep(5)
 
 ############ alice generates a random session key
 from cryptography.fernet import Fernet
