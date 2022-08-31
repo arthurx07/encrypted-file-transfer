@@ -22,6 +22,8 @@ private_key = rsa.generate_private_key(
     )
 public_key = private_key.public_key()
 
+print("[*] Public and private keys generated")
+
 # Storing alice's keys
 from cryptography.hazmat.primitives import serialization
 private_pem = private_key.private_bytes(
@@ -39,7 +41,7 @@ public_pem = public_key.public_bytes(
 with open('alice_public_key.pem', 'wb') as f:
     f.write(public_pem)
 
-print("[*] Private and public keys generated and stored.")
+print("[*] Public and private keys stored as {alice_p*_key}")
 
 ####################### alice generates a random session key
 from cryptography.fernet import Fernet
@@ -49,7 +51,7 @@ key = Fernet.generate_key()
 with open("key.key", "wb") as key_file:
     key_file.write(key)
 
-print("[*] Random session key generated and stored")
+print("[*] Random session key generated and stored as {key.key}")
 
 #3#################### alice generates hash from file
 from hashlib import blake2b
@@ -74,7 +76,7 @@ hash_file = open(FILE + ".blake2b", "w")
 n = hash_file.write(HASH)
 hash_file.close()
 
-print("[*] Hash generated from file")
+print("[*] Hash generated from ({}) and written to {}.blake2b".format(FILE, FILE))
 
 ########################## alice encrypts hash w/ alice private key (signs file)
 
@@ -88,9 +90,13 @@ with open("alice_private_key.pem", "rb") as key_file:
         backend=default_backend()
     )
 
+print("[*] Loaded {alice_private_key.pem}")
+
 # Load the contents of the file to be signed.
 with open(FILE + '.blake2b', 'rb') as f:
     payload = f.read()
+
+print("[*] Loaded {{}.blake2b}".format(FILE))
 
 # Sign the payload file.
 from cryptography.hazmat.primitives import hashes
@@ -109,7 +115,7 @@ signature = base64.b64encode(
 with open(FILE + '.sig', 'wb') as f:
     f.write(signature)
 
-print("[*] Hash encrypted with private key (file signed)")
+print("[*] {{}.blake2b} file signed with private key to {{}.sig}".format(FILE, FILE))
 
 ########################## alice encrypts file w/ session key
 
@@ -124,7 +130,7 @@ encrypted_data = f.encrypt(file_data)
 with open(FILE + ".encrypted", "wb") as file:
     file.write(encrypted_data)
 
-print("[*] File encrypted with session key")
+print("[*] {}.encrypted encrypted with session key".format(FILE))
 
 ####################### alice establishes a connection with bob
 
@@ -132,14 +138,16 @@ print("[*] File encrypted with session key")
 SERVER_HOST = "0.0.0.0" #means all ipv4 addresses that are on the local machine
 SERVER_PORT = 5001
 
-print("[*] Creating tftp server")
 # create the server tftpy
 server = tftpy.TftpServer('.')
+print("[*] Tftp server created with host {} on port {}".format(SERVER_HOST, SERVER_PORT))
 
+print("[*] Listening, waiting for other devices to connect and send files")
+print("[*] Received {bob_public_key.pem}")
+print("[*] Uploaded {alice_public_key.pem}")
 # script which waits 5 sec and encrypts session key w/ bob public key
 # os.system("python alice-encrypt-session-key.py")
-
-print("[*] Listening")
+print("[*] {{}.sig}, {}.encrypted, {key.encrypted} sent to bob")
 server.listen(SERVER_HOST, SERVER_PORT,.4)
 
 # here alice receives request to send alice public key, encrypted hash, file and session key
@@ -147,5 +155,5 @@ server.listen(SERVER_HOST, SERVER_PORT,.4)
 # print("Stop listening")
 # # ?????
 
-print("[*] Close server")
 server.stop()
+print("[*] Finished connection")

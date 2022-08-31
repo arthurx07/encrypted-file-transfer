@@ -1,2 +1,2 @@
-pip install tqdm
+pip install tftpy
 pip install cryptography
