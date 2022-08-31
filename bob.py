@@ -1,38 +1,9 @@
 #!/bin/env python
 
-import socket
-import tqdm # for progress bar
-import os
+import tftpy
 import time
 
-import base64 # for base64 encoding
-def utf8(s: bytes):
-    return str(s, 'utf-8')
-
-# send/receive 4096 bytes each time
-BUFFER_SIZE = 4096
-SEPARATOR = "<SEPARATOR>"
-
-################ bob sends alice his session key
-
-# the ip address or hostname of the server, the receiver
-host = "192.168.1.144"
-# the port, let's use 5001
-port = 5001
-# the name of file we want to send, make sure it exists
-#filename = input("Enter filename: ")
-# get the file size
-#filesize = os.path.getsize(filename)
-
-# create the client socket
-s = socket.socket()
-
-# connect to receiver
-print(f"[+] Connecting to {host}:{port} ... ")
-s.connect((host, port))
-print("[+] Connected.")
-
-# Generating bob's key
+################### Generating bob's key
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives.asymmetric import rsa
 private_key = rsa.generate_private_key(
@@ -59,91 +30,50 @@ public_pem = public_key.public_bytes(
 with open('bob_public_key.pem', 'wb') as f:
     f.write(public_pem)
 
-# get bob public key filename and size
-bob_public_key_filename = "bob_public_key.pem"
-bob_public_key_filesize = os.path.getsize(bob_public_key_filename)
+print("[*] Private and public keys generated and stored.")
 
-# send bob public key filename and size
-s.send(f"{bob_public_key_filename}{SEPARATOR}{bob_public_key_filesize}".encode())
 
-# start sending bob public key
-progress = tqdm.tqdm(range(bob_public_key_filesize), f"Sending {bob_public_key_filename}", unit="B", unit_scale=True, unit_divisor=1024)
-with open(bob_public_key_filename, "rb") as f:
-    while True:
-        # read the bytes from bob's public key 
-        bytes_read = f.read(BUFFER_SIZE)
-        if not bytes_read:
-            # bob's public key file transmitting is done
-            break
-        # we use sendall to assure transimission in 
-        # busy networks
-        s.sendall(bytes_read)
-        # update the progress bar
-        progress.update(len(bytes_read))
-f.close()
+################ bob establishes a connection with alice
 
-# close the socket
-s.close()
+# the ip address or hostname of the server, the receiver
+HOST = "192.168.1.144"
+# the port, let's use 5001
+PORT = 5001
 
-# device's IP address
-SERVER_HOST = "0.0.0.0" #means all ipv4 addresses that are on the local machine
-SERVER_PORT = 5001
+################### bob sends his public key to alice
 
-# create the server socket
-# TCP socket
-s = socket.socket()
+client = tftpy.TftpClient(HOST, PORT)
 
-# bind the socket to our local address
-s.bind((SERVER_HOST, SERVER_PORT))
+print("[*] Connected to alice")
 
-# enabling our server to accept connections
-# 1 here is the number of accepted connections that
-# the system will allow before refusing new connections
-s.listen(1)
-print(f"[*] Listening as {SERVER_HOST}:{SERVER_PORT}")
+# initiates a tftp upload to the configured remote host, uploading the filename passed. 
+client.upload("bob_public_key.pem", "bob_public_key.pem")
 
-# accept connection if there is any
-client_socket, address = s.accept()
-# if below code is executed, that means the sender is connected
-print(f"[+] {address} is connected.")
+print("[*] Uploaded public key to alice")
 
-##### bob receives alice's public key
+time.sleep(5)
 
-# receive alice key file infos
-# receive using client socket, not server socket
-received = client_socket.recv(BUFFER_SIZE).decode()
-alice_public_key_filename, alice_public_key_filesize = received.split(SEPARATOR)
-# remove absolute path if there is
-alice_public_key_filename = os.path.basename(alice_public_key_filename)
-# convert to integer
-alice_public_key_filesize, sep, tail = alice_public_key_filesize.partition('-')
-alice_public_key_filesize = int(alice_public_key_filesize)
+################### bob receives alice's public key
 
-# start receiving alice key file from the socket
-# and writing to the file stream
-progress = tqdm.tqdm(range(alice_public_key_filesize), f"Receiving {alice_public_key_filename}", unit="B", unit_scale=True, unit_divisor=1024)
-with open(alice_public_key_filename, "wb") as f:
-    while True:
-        # read 1024 bytes from the socket (receive)
-        bytes_read = client_socket.recv(BUFFER_SIZE)
-        if not bytes_read:
-            # nothing is received
-            # alice's key file transmitting is done
-            break
-        # write to alice key file the bytes we just received
-        f.write(bytes_read)
-        # update the progress bar
-        progress.update(len(bytes_read))
-f.close()
+# initiates a tftp download from the configured remote host, requesting the filename passed
+client.download("alice_public_key.pem", "alice_public_key.pem")
 
-# close the client socket
-client_socket.close()
-# close the server socket
-s.close()
+print("[*] Downloaded alice's public key")
+
 
 ################## bob receives alice's hash, file, session key
+FILE = "file"
 
-###### bob decrypts session key w/ bob private key
+for name in (FILE + ".sig", FILE + ".encrypted"):
+    client.download(name, name)
+
+print("[*] Downloaded encrypted file, hash")
+
+client.download("key.encrypted", "key.encrypted")
+
+print("[*] Downloaded encrypted session key")
+
+################## bob decrypts session key w/ bob private key
 # Load bob private key
 with open("bob_private_key.pem", "rb") as key_file:
     private_key = serialization.load_pem_private_key(
@@ -151,6 +81,8 @@ with open("bob_private_key.pem", "rb") as key_file:
         password=None,
         backend=default_backend()
     )
+
+print("[*] Loaded bob private key")
 
 # Decrypt file
 with open("key.encrypted", "rb") as f:
@@ -166,12 +98,15 @@ with open("key.encrypted", "rb") as f:
 
         with open('key.key', "ab") as f: f.write(decrypted)
 
+print("[*] Decrypted private key and written into file key.key")
 
 ###### bob decrypts file w/ session key
 # Loads the key from the current directory named `key.key`
 def load_key():
     return open("key.key", "rb").read()
 key = load_key()
+
+print("[*] Loaded session key from file key.key")
 
 # Given a filename (str) and key (bytes), it decripts the file and write it
 f = Fernet(key)
@@ -184,6 +119,8 @@ decrypted_data = f.decrypt(encrypted_data)
 FILE = FILE.removesuffix('.encrypted')    # Returns original FILE name
 with open(FILE, "wb") as file:
     file.write(decrypted_data)
+
+print("[*] File decrypted with session key")
 
 ###### bob verificates file (decrypts hash, generates hash from file, compares)
 import cryptography.exceptions
@@ -212,6 +149,7 @@ try:
         ),
         hashes.SHA256(),
     )
+    print("Verification succeeded")
 except cryptography.exceptions.InvalidSignature as e:
     print('ERROR: Payload and/or signature files failed verification!')
 
