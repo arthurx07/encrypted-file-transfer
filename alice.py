@@ -35,6 +35,7 @@ def genPkcKey():
 class Fernet: # alice generates a random session key
     def __init__(self, Fernet):
         self.Fernet = Fernet
+
     def genSkcKey(self):
         from cryptography.fernet import Fernet
         # Generate skc key and save into file
@@ -140,7 +141,6 @@ def loadBobPublicKey(): # Load bob public key
 def encryptSkcKey(): # encrypt key.key
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import padding
-    print("test")
     loadBobPublicKey()
     # Save key contents as bytes in message variable
     f = open('key.key', 'rb')
@@ -180,10 +180,8 @@ def connection(): # upload files, download bob_public_key
     while file_exists("key.encrypted") == False:
         # download bob's public key
         # initiates a tftp download from the configured remote host, requesting the filename passed
-        #client.download("bob_public_key.pem", "bob_public_key.pem")
-        print("try")
+        client.download("bob_public_key.pem", "bob_public_key.pem")
         if file_exists("bob_public_key.pem") == True:
-            print("2y")
             print("[*] Received {bob_public_key.pem}")
             Thread(target = encryptSkcKey).start()
             break
@@ -213,22 +211,25 @@ def connection(): # upload files, download bob_public_key
 
 def connectionSuccessful():
     global client
-    while file_exists("file_decrypted") == False:
-        time.sleep(.5)
-        client.download("files.decrypted", "files.decrypted")
-        if file_exists("files_decrypted") == True:
-            print("[*] Bob decrypted files successfully")
-            print("[*] Finished connection")
-            raise SystemExit
+    # while file_exists("file_decrypted") == False:
+        # time.sleep(.5)
+        # client.download("files.decrypted", "files.decrypted")
+        # if file_exists("files_decrypted") == True:
+            # print("[*] Bob decrypted files successfully")
+            # print("[*] Finished connection")
+            # raise SystemExit
 
 if __name__ == '__main__':
     import tftpy
     import base64 # for base64 encoding
     import time
 
-    HOST = input("Enter receiver ip: ")
-    PORT = int(input("Enter port: "))
-    FILE = input("Enter file to send to {}: ".format(HOST))
+    # HOST = input("Enter receiver ip: ")
+    HOST = "192.168.1.144"
+    # PORT = int(input("Enter port: "))
+    PORT = 5001
+    #FILE = input("Enter file to send to {}: ".format(HOST))
+    FILE = "nagatoro.png"
 
     genPkcKey()
     f = Fernet(Fernet)

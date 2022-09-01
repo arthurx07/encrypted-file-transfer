@@ -46,22 +46,25 @@ class Server:
         self.server.listen(SERVER_HOST, SERVER_PORT) # todo: stop server after sending all files
 
     def connection(self):
-        while file_exists("file_name") == False:
+        while True:
             if file_exists("file_name") == True:
-                with open('file_name', 'r') as file:
-                    global FILE
-                    FILE = file.read().rstrip()
-                print("[*] Connection successful. {{{}}} received, starting decryption.".format(FILE))
+                # with open('file_name', 'rb') as fp:
+                #     FILE = fp.read()                
+                FILE = "nagatoro.png" # ERROR
+                break
         while True:
             if file_exists("alice_public_key.pem") == True and file_exists(FILE + ".sig") == True and file_exists(FILE + ".encrypted") == True and file_exists("key.encrypted") == True:
-                print("files received")
                 file = open("files_received", "w")
                 file.write("this file will be deleted")
                 file.close()
+                print("[*] Connection successful. {{{}}} received, starting decryption.".format(FILE))
+                break
+        return FILE
 
     def connectionSuccessful(self):
         while True: 
             if file_exists(FILE) == True:
+                print("hey")
                 file = open("file_decrypted", "w")
                 file.write("this file will be deleted")
                 file.close()
@@ -80,12 +83,15 @@ def loadBobPrivateKey(): # Loads bob private key
             backend=default_backend()
         )
 
+    return private_key
     print("[*] Loaded {bob_private_key.pem}")
 
 def decryptSkcKey(): # Decrypt session key
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import padding
-    with open("key.encrypted", "rb") as f:
+
+    private_key = loadBobPrivateKey()
+    with open('key.encrypted', "rb") as f:
         for encrypted in f:
             decrypted = private_key.decrypt(
                 encrypted,
@@ -95,15 +101,13 @@ def decryptSkcKey(): # Decrypt session key
                     label=None
                 )
             )
-
-            with open('key.key', "ab") as f: f.write(decrypted)
+    with open('key.key', "wb") as f: f.write(decrypted)
 
     print("[*] Decrypted {key.encrypted} and written into {key.key}")
 
 def loadSkcKey():# Loads the key from the current directory named `key.key`
-    def load_key():
-        return open("key.key", "rb").read()
-    key = load_key()
+    global key
+    key = open("key.key", "rb").read()
 
     print("[*] Loaded {key.key}")
 
@@ -111,6 +115,8 @@ def decryptFile(): # bob decrypts file w/ session key
     # Given a filename (str) and key (bytes), it decripts the file and write it
     from cryptography.fernet import Fernet
 
+    global key
+    global FILE
     f = Fernet(key)
     with open(FILE + ".encrypted", "rb") as file:
         # read the encrypted data
@@ -153,31 +159,39 @@ def genHash(): # bob generates blake2b hash from file
     print("[*] Hash generated from ({}) and writtento {}.blake2b".format(FILE, FILE))
 
 class Verify: # bob verificates file (decrypts hash, generates hash from file, compares)
-    def loadAlPublicKey():
+    def __init__(self):
+        self.public_key = None
+        self.payload_contents = None
+        self.signature = None
+
+    def loadAlPublicKey(self):
         import cryptography.exceptions
         from cryptography.hazmat.primitives.serialization import load_pem_public_key
+        from cryptography.hazmat.backends import default_backend
 
         # Load the public key.
         with open('alice_public_key.pem', 'rb') as f:
-            public_key = load_pem_public_key(f.read(), default_backend())
+            self.public_key = load_pem_public_key(f.read(), default_backend())
 
         print("[*] Loaded {alice_public_key.pem}")
 
-    def loadHashSig():
+    def loadHashSig(self):
         # Load the payload contents and the signature.
         with open(FILE + ".blake2b", 'rb') as f:
-            payload_contents = f.read()
+            self.payload_contents = f.read()
         with open(FILE + ".sig", 'rb') as f:
-            signature = base64.b64decode(f.read())
+            self.signature = base64.b64decode(f.read())
 
         print("[*] Loaded {{{}.blake2b}} and {{{}.sig}}".format(FILE, FILE))
 
-    def verification():
+    def verification(self):
+        from cryptography.hazmat.primitives.asymmetric import padding
+        from cryptography.hazmat.primitives.asymmetric import hashes
         # Perform the verification.
         try:
-            public_key.verify(
-                signature,
-                payload_contents,
+            self.public_key.verify(
+                self.signature,
+                self.payload_contents,
                 padding.PSS(
                     mgf = padding.MGF1(hashes.SHA256()),
                     salt_length = padding.PSS.MAX_LENGTH,
@@ -195,6 +209,7 @@ if __name__ == '__main__':
     import base64 # for base64 encoding 
     from threading import Thread
     from os.path import exists as file_exists
+    FILE = "nagatoro.png"
 
     genPkcKey()
     loadBobPrivateKey()
