@@ -32,8 +32,7 @@ def genPkcKey():
 
     print("[*] Public and private keys stored as {alice_p*_key}")
 
-####################### alice generates a random session key
-class Fernet:
+class Fernet: # alice generates a random session key
     def __init__(self, Fernet):
         self.Fernet = Fernet
     def genSkcKey(self):
@@ -45,8 +44,7 @@ class Fernet:
 
         print("[*] Random session key generated and stored as {key.key}")
 
-    ########################## alice encrypts file w/ session key
-    def encryptFile(self):
+    def encryptFile(self): # alice encrypts file w/ session key
         from cryptography.fernet import Fernet
         # Given a filename (str) and key (bites), it encrypts the file and write it
         f = Fernet(self.key)
@@ -61,7 +59,7 @@ class Fernet:
 
         print("[*] {}.encrypted encrypted with session key".format(FILE))
 
-def genHash():
+def genHash(): # alice generates hash from file
     from hashlib import blake2b
 
     # divide files in chunks, to not use a lot of ram for big files
@@ -87,8 +85,7 @@ def genHash():
     print("[*] Hash generated from ({}) and written to {}.blake2b".format(FILE, FILE))
 
 class EncryptHash: # alice encrypts hash w/ alice private key (signs file)
-    def loadAlPrivateKey(self):
-        # Load alice private key
+    def loadAlPrivateKey(self): # Load alice private key
         from cryptography.hazmat.backends import default_backend
         from cryptography.hazmat.primitives import serialization
         with open("alice_private_key.pem", "rb") as key_file:
@@ -100,7 +97,7 @@ class EncryptHash: # alice encrypts hash w/ alice private key (signs file)
 
         print("[*] Loaded {alice_private_key.pem}")
 
-    def signHash(self):
+    def signHash(self): # sign hash 
         # Load the contents of the file to be signed.
         with open(FILE + '.blake2b', 'rb') as f:
             payload = f.read()
@@ -127,15 +124,12 @@ class EncryptHash: # alice encrypts hash w/ alice private key (signs file)
         print("[*] {{{}.blake2b}} file signed with private key to {{{}.sig}}".format(FILE, FILE))
 
 
-def loadBobPublicKey():
+def loadBobPublicKey(): # Load bob public key 
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import serialization
 
-    from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.primitives.asymmetric import padding
-
-    # Load bob public key 
     with open("bob_public_key.pem", "rb") as key_file:
+        global public_key
         public_key = serialization.load_pem_public_key(
             key_file.read(),
             backend=default_backend()
@@ -143,7 +137,10 @@ def loadBobPublicKey():
 
     print("[*] Loaded {bob_public_key.pem}")
 
-def encryptSkcKey():
+def encryptSkcKey(): # encrypt key.key
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.asymmetric import padding
+    print("test")
     loadBobPublicKey()
     # Save key contents as bytes in message variable
     f = open('key.key', 'rb')
@@ -154,6 +151,7 @@ def encryptSkcKey():
 
     # Encrypt key
     open('key.encrypted', "wb").close() # clear file
+    global public_key
     encrypted = public_key.encrypt(
         message,
         padding.OAEP(
@@ -169,20 +167,23 @@ def encryptSkcKey():
     f.close()
 
     print("[*] {key.key} encrypted with {bob_public_key} as {key.encrypted}")
-def establishConnection():
+
+def establishConnection(): # create client tftpy
     global client
     client = tftpy.TftpClient(HOST, PORT)
     print("[*] Connection succeeded with {} on port {}".format(HOST, PORT))
     return client
 
-def connection():
+def connection(): # upload files, download bob_public_key
     from threading import Thread
     global client
-    while file_exists("bob_public_key.pem") == False:
+    while file_exists("key.encrypted") == False:
         # download bob's public key
         # initiates a tftp download from the configured remote host, requesting the filename passed
-        client.download("bob_public_key.pem", "bob_public_key.pem")
+        #client.download("bob_public_key.pem", "bob_public_key.pem")
+        print("try")
         if file_exists("bob_public_key.pem") == True:
+            print("2y")
             print("[*] Received {bob_public_key.pem}")
             Thread(target = encryptSkcKey).start()
             break
