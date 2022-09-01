@@ -6,6 +6,7 @@ https://stackoverflow.com/questions/6996603/how-do-i-delete-a-file-or-folder-in-
 
 3. fix { ValueError: Ciphertext length must be equal to key size }
 https://stackoverflow.com/questions/61522762/valueerror-ciphertext-length-must-be-equal-to-key-size
+https://libreddit.tiekoetter.com/r/learnpython/comments/kp29lq/cryptography_32_ciphertext_length_must_be_equal/
 
 4. set better prints
 
