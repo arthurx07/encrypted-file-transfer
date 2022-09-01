@@ -1,18 +1,14 @@
 #!/bin/env python
 
-FILE = input("Enter file to encrypt: ")
-
-##################### alice generates public key
-
-def gen_pkc_key():
-    # Generating alice key
+def genPkcKey():
+    # Generating alice's key
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives.asymmetric import rsa
     private_key = rsa.generate_private_key(
-    public_exponent=65537,
-    key_size=2048,
-    backend=default_backend()
-    )
+        public_exponent=65537,
+        key_size=2048,
+        backend=default_backend()
+        )
     public_key = private_key.public_key()
 
     print("[*] Public and private keys generated")
@@ -20,17 +16,17 @@ def gen_pkc_key():
     # Storing alice's keys
     from cryptography.hazmat.primitives import serialization
     private_pem = private_key.private_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PrivateFormat.PKCS8,
-    encryption_algorithm=serialization.NoEncryption()
-    )
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption()
+        )
     with open('alice_private_key.pem', 'wb') as f:
         f.write(private_pem)
 
     public_pem = public_key.public_bytes(
-    encoding=serialization.Encoding.PEM,
-    format=serialization.PublicFormat.SubjectPublicKeyInfo
-    )
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PublicFormat.SubjectPublicKeyInfo
+        )
     with open('alice_public_key.pem', 'wb') as f:
         f.write(public_pem)
 
@@ -65,8 +61,7 @@ class Fernet:
 
         print("[*] {}.encrypted encrypted with session key".format(FILE))
 
-##################### alice generates hash from file
-def gen_hash():
+def genHash():
     from hashlib import blake2b
 
     # divide files in chunks, to not use a lot of ram for big files
@@ -91,8 +86,7 @@ def gen_hash():
 
     print("[*] Hash generated from ({}) and written to {}.blake2b".format(FILE, FILE))
 
-########################## alice encrypts hash w/ alice private key (signs file)
-class Hash:
+class EncryptHash: # alice encrypts hash w/ alice private key (signs file)
     def loadAlPrivateKey(self):
         # Load alice private key
         from cryptography.hazmat.backends import default_backend
@@ -102,7 +96,7 @@ class Hash:
                 key_file.read(),
                 password=None,
                 backend=default_backend()
-            )
+                )
 
         print("[*] Loaded {alice_private_key.pem}")
 
@@ -123,33 +117,17 @@ class Hash:
                 padding.PSS(
                     mgf = padding.MGF1(hashes.SHA256()),
                     salt_length = padding.PSS.MAX_LENGTH,
-                ),
+                    ),
                 hashes.SHA256(),
+                )
             )
-        )
         with open(FILE + '.sig', 'wb') as f:
             f.write(signature)
 
         print("[*] {{{}.blake2b}} file signed with private key to {{{}.sig}}".format(FILE, FILE))
 
 
-####################### alice establishes a connection with bob
-
-def establish_connection():
-    # device's IP address
-    SERVER_HOST = "0.0.0.0" #means all ipv4 addresses that are on the local machine
-    SERVER_PORT = 5001
-
-    # create the server tftpy
-    server = tftpy.TftpServer('.')
-    print("[*] Tftp server created with host {} on port {}".format(SERVER_HOST, SERVER_PORT))
-
-    print("[*] Listening, waiting for other devices to connect and send files")
-    server.listen(SERVER_HOST, SERVER_PORT) # todo: stop server after sending all files
-
-# here alice receives request to send alice public key, encrypted hash, file and session key
-
-def load_bob_public_key():
+def loadBobPublicKey():
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import serialization
 
@@ -165,8 +143,8 @@ def load_bob_public_key():
 
     print("[*] Loaded {bob_public_key.pem}")
 
-def encrypt_skc_key():
-    load_bob_public_key()
+def encryptSkcKey():
+    loadBobPublicKey()
     # Save key contents as bytes in message variable
     f = open('key.key', 'rb')
     message = f.read()
@@ -177,11 +155,11 @@ def encrypt_skc_key():
     # Encrypt key
     open('key.encrypted', "wb").close() # clear file
     encrypted = public_key.encrypt(
-            message,
-            padding.OAEP(
-                mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                algorithm=hashes.SHA256(),
-                label=None
+        message,
+        padding.OAEP(
+            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+            algorithm=hashes.SHA256(),
+            label=None
             )
         )
 
@@ -191,38 +169,75 @@ def encrypt_skc_key():
     f.close()
 
     print("[*] {key.key} encrypted with {bob_public_key} as {key.encrypted}")
+def establishConnection():
+    global client
+    client = tftpy.TftpClient(HOST, PORT)
+    print("[*] Connection succeeded with {} on port {}".format(HOST, PORT))
+    return client
 
 def connection():
-    from os.path import exists as file_exists
-    while True:
+    from threading import Thread
+    global client
+    while file_exists("bob_public_key.pem") == False:
+        # download bob's public key
+        # initiates a tftp download from the configured remote host, requesting the filename passed
+        client.download("bob_public_key.pem", "bob_public_key.pem")
         if file_exists("bob_public_key.pem") == True:
             print("[*] Received {bob_public_key.pem}")
-            Thread(target = encrypt_skc_key).start()
+            Thread(target = encryptSkcKey).start()
+            break
+
+    while file_exists("files_received") == False:
+        #open file_name
+        file = open("file_name" , "w")
+        # write FILE name to file_name
+        file.write(FILE + "\n")   
+        #close file_name
+        file.close()
+
+        # upload alice's public key, file, hash, session key
+        # initiates a tftp upload to the configured remote host, uploading the filename passed.
+        for name in ("file_name", "alice_public_key.pem", FILE + ".sig", FILE + ".encrypted", "key.encrypted"):
+            client.upload(name, name)
+
+        client.download("files_received", "files_received")
+        time.sleep(.5)
         if file_exists("files_received") == True:
             print("[*] Uploaded {alice_public_key.pem}")
             print("[*] Uploaded {{{}.sig}}, {{{}.encrypted}}, {{key.encrypted}}".format(FILE, FILE))
             print("[*] Bob received files")
-            connectionSuccessful()
             break
+        else:
+            time.sleep(.5)
 
 def connectionSuccessful():
-    server.stop()
-    print("[*] Finished connection")
-    raise SystemExit
+    global client
+    while file_exists("file_decrypted") == False:
+        time.sleep(.5)
+        client.download("files.decrypted", "files.decrypted")
+        if file_exists("files_decrypted") == True:
+            print("[*] Bob decrypted files successfully")
+            print("[*] Finished connection")
+            raise SystemExit
 
 if __name__ == '__main__':
     import tftpy
     import base64 # for base64 encoding
-    from threading import Thread
+    import time
 
-    gen_pkc_key()
-    s = Fernet(Fernet)
-    s.genSkcKey()
-    gen_hash()
-    s.encryptFile()
-    s = Hash()
-    s.loadAlPrivateKey()
-    s.signHash()
-    Thread(target = establish_connection).start()
-    Thread(target = connection).start()
+    HOST = input("Enter receiver ip: ")
+    PORT = int(input("Enter port: "))
+    FILE = input("Enter file to send to {}: ".format(HOST))
 
+    genPkcKey()
+    f = Fernet(Fernet)
+    f.genSkcKey()
+    genHash()
+    f.encryptFile()
+    e = EncryptHash()
+    e.loadAlPrivateKey()
+    e.signHash()
+    establishConnection()
+    from os.path import exists as file_exists
+    connection()
+    connectionSuccessful()
