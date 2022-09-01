@@ -64,12 +64,11 @@ class Server:
     def connectionSuccessful(self):
         while True: 
             if file_exists(FILE) == True:
-                print("hey")
                 file = open("file_decrypted", "w")
                 file.write("this file will be deleted")
                 file.close()
-        self.server.stop()
         print("[*] Finished connection")
+        self.server.stop()
 
 def loadBobPrivateKey(): # Loads bob private key
     from cryptography.hazmat.primitives import serialization
@@ -186,7 +185,7 @@ class Verify: # bob verificates file (decrypts hash, generates hash from file, c
 
     def verification(self):
         from cryptography.hazmat.primitives.asymmetric import padding
-        from cryptography.hazmat.primitives.asymmetric import hashes
+        from cryptography.hazmat.primitives import hashes
         # Perform the verification.
         try:
             self.public_key.verify(

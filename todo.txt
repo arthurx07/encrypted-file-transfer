@@ -1,0 +1,16 @@
+1. set FILE as global function in bob.py
+https://stackoverflow.com/questions/10588317/python-function-global-variables
+
+2. store all temporary files in tmp/, then delete them
+https://stackoverflow.com/questions/6996603/how-do-i-delete-a-file-or-folder-in-python
+
+3. fix { ValueError: Ciphertext length must be equal to key size }
+https://stackoverflow.com/questions/61522762/valueerror-ciphertext-length-must-be-equal-to-key-size
+
+4. set better prints
+
+5. comment code better
+
+6. translate to catalan
+
+7. set help / options / tui [argparse]

@@ -211,13 +211,13 @@ def connection(): # upload files, download bob_public_key
 
 def connectionSuccessful():
     global client
-    # while file_exists("file_decrypted") == False:
-        # time.sleep(.5)
-        # client.download("files.decrypted", "files.decrypted")
-        # if file_exists("files_decrypted") == True:
-            # print("[*] Bob decrypted files successfully")
-            # print("[*] Finished connection")
-            # raise SystemExit
+    while file_exists("file_decrypted") == False:
+        time.sleep(5)
+        client.download("file_decrypted", "file_decrypted")
+        if file_exists("file_decrypted") == True:
+            print("[*] Bob decrypted files successfully")
+            print("[*] Finished connection")
+            raise SystemExit
 
 if __name__ == '__main__':
     import tftpy
