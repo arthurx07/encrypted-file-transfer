@@ -19,19 +19,20 @@ def genPkcKey(): # Generating bob's key
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption()
         )
-    with open('bob_private_key.pem', 'wb') as f:
+    with open(TMPDIR + 'bob_private_key.pem', 'wb') as f:
         f.write(private_pem)
 
     public_pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
-    with open('bob_public_key.pem', 'wb') as f:
+    with open(TMPDIR + 'bob_public_key.pem', 'wb') as f:
         f.write(public_pem)
 
     print("[*] Public and private keys stored as {bob_p*_key}")
 
 class Server:
+    global FILE
     def establishConnection(self): # bob establishes a connection with alice
         # device's IP address
         SERVER_HOST = "0.0.0.0" #means all ipv4 addresses that are on the local machine
@@ -47,14 +48,14 @@ class Server:
 
     def connection(self):
         while True:
-            if file_exists("file_name") == True:
-                # with open('file_name', 'rb') as fp:
-                #     FILE = fp.read()                
-                FILE = "nagatoro.png" # ERROR
+            if file_exists(TMPDIR + "file_name") == True:
+                time.sleep(.1)
+                with open(TMPDIR + 'file_name', 'r') as file:
+                    FILE = file.read().rstrip()
                 break
         while True:
-            if file_exists("alice_public_key.pem") == True and file_exists(FILE + ".sig") == True and file_exists(FILE + ".encrypted") == True and file_exists("key.encrypted") == True:
-                file = open("files_received", "w")
+            if file_exists(TMPDIR + "alice_public_key.pem") == True and file_exists(TMPDIR + FILE + ".sig") == True and file_exists(TMPDIR + FILE + ".encrypted") == True and file_exists(TMPDIR + "key.encrypted") == True:
+                file = open(TMPDIR + "files_received", "w")
                 file.write("this file will be deleted")
                 file.close()
                 print("[*] Connection successful. {{{}}} received, starting decryption.".format(FILE))
@@ -62,9 +63,10 @@ class Server:
         return FILE
 
     def connectionSuccessful(self):
+        print(FILE)
         while True: 
             if file_exists(FILE) == True:
-                file = open("file_decrypted", "w")
+                file = open(TMPDIR + "file_decrypted", "w")
                 file.write("this file will be deleted")
                 file.close()
         print("[*] Finished connection")
@@ -75,7 +77,7 @@ def loadBobPrivateKey(): # Loads bob private key
     from cryptography.hazmat.backends import default_backend
     # Load bob private key
 
-    with open("bob_private_key.pem", "rb") as key_file:
+    with open(TMPDIR + "bob_private_key.pem", "rb") as key_file:
         private_key = serialization.load_pem_private_key(
             key_file.read(),
             password=None,
@@ -90,7 +92,7 @@ def decryptSkcKey(): # Decrypt session key
     from cryptography.hazmat.primitives.asymmetric import padding
 
     private_key = loadBobPrivateKey()
-    with open('key.encrypted', "rb") as f:
+    with open(TMPDIR + 'key.encrypted', "rb") as f:
         for encrypted in f:
             decrypted = private_key.decrypt(
                 encrypted,
@@ -100,13 +102,13 @@ def decryptSkcKey(): # Decrypt session key
                     label=None
                 )
             )
-    with open('key.key', "wb") as f: f.write(decrypted)
+    with open(TMPDIR + 'key.key', "wb") as f: f.write(decrypted)
 
     print("[*] Decrypted {key.encrypted} and written into {key.key}")
 
 def loadSkcKey():# Loads the key from the current directory named `key.key`
     global key
-    key = open("key.key", "rb").read()
+    key = open(TMPDIR + "key.key", "rb").read()
 
     print("[*] Loaded {key.key}")
 
@@ -117,7 +119,7 @@ def decryptFile(): # bob decrypts file w/ session key
     global key
     global FILE
     f = Fernet(key)
-    with open(FILE + ".encrypted", "rb") as file:
+    with open(TMPDIR + FILE + ".encrypted", "rb") as file:
         # read the encrypted data
         encrypted_data = file.read()
 
@@ -133,6 +135,7 @@ def decryptFile(): # bob decrypts file w/ session key
     print("[*] {} decrypted and stored".format(FILE))
 
 def genHash(): # bob generates blake2b hash from file
+    global FILE
     from hashlib import blake2b
 
     # divide files in chunks, to not use a lot of ram for big files
@@ -151,13 +154,14 @@ def genHash(): # bob generates blake2b hash from file
     HASH = "{0}".format(blake2.hexdigest())
 
     # write hash to file
-    hash_file = open(FILE + ".blake2b", "w")
+    hash_file = open(TMPDIR + FILE + ".blake2b", "w")
     n = hash_file.write(HASH)
     hash_file.close()
 
     print("[*] Hash generated from ({}) and writtento {}.blake2b".format(FILE, FILE))
 
-class Verify: # bob verificates file (decrypts hash, generates hash from file, compares)
+class Verify: # bob verifies file (decrypts hash, generates hash from file, compares)
+    global FILE
     def __init__(self):
         self.public_key = None
         self.payload_contents = None
@@ -169,16 +173,16 @@ class Verify: # bob verificates file (decrypts hash, generates hash from file, c
         from cryptography.hazmat.backends import default_backend
 
         # Load the public key.
-        with open('alice_public_key.pem', 'rb') as f:
+        with open(TMPDIR + 'alice_public_key.pem', 'rb') as f:
             self.public_key = load_pem_public_key(f.read(), default_backend())
 
         print("[*] Loaded {alice_public_key.pem}")
 
     def loadHashSig(self):
         # Load the payload contents and the signature.
-        with open(FILE + ".blake2b", 'rb') as f:
+        with open(TMPDIR + FILE + ".blake2b", 'rb') as f:
             self.payload_contents = f.read()
-        with open(FILE + ".sig", 'rb') as f:
+        with open(TMPDIR + FILE + ".sig", 'rb') as f:
             self.signature = base64.b64decode(f.read())
 
         print("[*] Loaded {{{}.blake2b}} and {{{}.sig}}".format(FILE, FILE))
@@ -201,6 +205,22 @@ class Verify: # bob verificates file (decrypts hash, generates hash from file, c
         except cryptography.exceptions.InvalidSignature as e:
             print('[X] ERROR: Payload and/or signature files failed verification!')
 
+def mkdir():
+    if os.path.isdir(TMPDIR) == False:
+        os.mkdir(TMPDIR)
+        # print("tmp/ directory created")
+    # else:
+        # print("tmp/ directory already exists")
+
+def rmfiles():
+    RMFILES = input("Would you like to remove temporary files? [Yes/No] ")
+    if RMFILES == "Yes" or RMFILES == "y":
+        os.rmdir(TMPDIR)
+        print("Temporary files removed")
+    else:
+        print("Temporary files not removed")
+    raise SystemExit
+
 
 if __name__ == '__main__':
     import tftpy
@@ -208,8 +228,11 @@ if __name__ == '__main__':
     import base64 # for base64 encoding 
     from threading import Thread
     from os.path import exists as file_exists
-    FILE = "nagatoro.png"
+    import os
 
+    TMPDIR = "tmp/"
+
+    mkdir()
     genPkcKey()
     loadBobPrivateKey()
     s = Server()
@@ -225,6 +248,7 @@ if __name__ == '__main__':
             v.loadHashSig()
             v.verification()
             s.connectionSuccessful()
+            rmfiles()
         else:
             pass
 

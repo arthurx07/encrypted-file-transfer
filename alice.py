@@ -20,14 +20,14 @@ def genPkcKey():
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption()
         )
-    with open('alice_private_key.pem', 'wb') as f:
+    with open(TMPDIR + '/alice_private_key.pem', 'wb') as f:
         f.write(private_pem)
 
     public_pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
-    with open('alice_public_key.pem', 'wb') as f:
+    with open(TMPDIR + 'alice_public_key.pem', 'wb') as f:
         f.write(public_pem)
 
     print("[*] Public and private keys stored as {alice_p*_key}")
@@ -40,7 +40,7 @@ class Fernet: # alice generates a random session key
         from cryptography.fernet import Fernet
         # Generate skc key and save into file
         self.key = Fernet.generate_key()
-        with open("key.key", "wb") as key_file:
+        with open(TMPDIR + "key.key", "wb") as key_file:
             key_file.write(self.key)
 
         print("[*] Random session key generated and stored as {key.key}")
@@ -55,7 +55,7 @@ class Fernet: # alice generates a random session key
         # encrypt data
         encrypted_data = f.encrypt(file_data)
         # write the encrypted file
-        with open(FILE + ".encrypted", "wb") as file:
+        with open(TMPDIR + FILE + ".encrypted", "wb") as file:
             file.write(encrypted_data)
 
         print("[*] {}.encrypted encrypted with session key".format(FILE))
@@ -79,7 +79,7 @@ def genHash(): # alice generates hash from file
     HASH = "{0}".format(blake2.hexdigest())
 
     # write hash to file
-    hash_file = open(FILE + ".blake2b", "w")
+    hash_file = open(TMPDIR + FILE + ".blake2b", "w")
     n = hash_file.write(HASH)
     hash_file.close()
 
@@ -89,7 +89,7 @@ class EncryptHash: # alice encrypts hash w/ alice private key (signs file)
     def loadAlPrivateKey(self): # Load alice private key
         from cryptography.hazmat.backends import default_backend
         from cryptography.hazmat.primitives import serialization
-        with open("alice_private_key.pem", "rb") as key_file:
+        with open(TMPDIR + "alice_private_key.pem", "rb") as key_file:
             self.private_key = serialization.load_pem_private_key(
                 key_file.read(),
                 password=None,
@@ -100,7 +100,7 @@ class EncryptHash: # alice encrypts hash w/ alice private key (signs file)
 
     def signHash(self): # sign hash 
         # Load the contents of the file to be signed.
-        with open(FILE + '.blake2b', 'rb') as f:
+        with open(TMPDIR + FILE + '.blake2b', 'rb') as f:
             payload = f.read()
 
         print("[*] Loaded {{{}.blake2b}}".format(FILE))
@@ -119,7 +119,7 @@ class EncryptHash: # alice encrypts hash w/ alice private key (signs file)
                 hashes.SHA256(),
                 )
             )
-        with open(FILE + '.sig', 'wb') as f:
+        with open(TMPDIR + FILE + '.sig', 'wb') as f:
             f.write(signature)
 
         print("[*] {{{}.blake2b}} file signed with private key to {{{}.sig}}".format(FILE, FILE))
@@ -129,7 +129,7 @@ def loadBobPublicKey(): # Load bob public key
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import serialization
 
-    with open("bob_public_key.pem", "rb") as key_file:
+    with open(TMPDIR + "bob_public_key.pem", "rb") as key_file:
         global public_key
         public_key = serialization.load_pem_public_key(
             key_file.read(),
@@ -143,14 +143,14 @@ def encryptSkcKey(): # encrypt key.key
     from cryptography.hazmat.primitives.asymmetric import padding
     loadBobPublicKey()
     # Save key contents as bytes in message variable
-    f = open('key.key', 'rb')
+    f = open(TMPDIR + 'key.key', 'rb')
     message = f.read()
     f.close()
 
     print("[*] Loaded {key.key} to be later encrypted")
 
     # Encrypt key
-    open('key.encrypted', "wb").close() # clear file
+    open(TMPDIR + 'key.encrypted', "wb").close() # clear file
     global public_key
     encrypted = public_key.encrypt(
         message,
@@ -162,7 +162,7 @@ def encryptSkcKey(): # encrypt key.key
         )
 
     # Write encryption to key.encrypted
-    f = open('key.encrypted', 'wb')
+    f = open(TMPDIR + 'key.encrypted', 'wb')
     f.write(encrypted)
     f.close()
 
@@ -177,18 +177,18 @@ def establishConnection(): # create client tftpy
 def connection(): # upload files, download bob_public_key
     from threading import Thread
     global client
-    while file_exists("key.encrypted") == False:
+    while file_exists(TMPDIR + "key.encrypted") == False:
         # download bob's public key
         # initiates a tftp download from the configured remote host, requesting the filename passed
-        client.download("bob_public_key.pem", "bob_public_key.pem")
-        if file_exists("bob_public_key.pem") == True:
+        client.download(TMPDIR + "bob_public_key.pem", TMPDIR + "bob_public_key.pem")
+        if file_exists(TMPDIR + "bob_public_key.pem") == True:
             print("[*] Received {bob_public_key.pem}")
             Thread(target = encryptSkcKey).start()
             break
 
-    while file_exists("files_received") == False:
+    while file_exists(TMPDIR + "files_received") == False:
         #open file_name
-        file = open("file_name" , "w")
+        file = open(TMPDIR + "file_name" , "w")
         # write FILE name to file_name
         file.write(FILE + "\n")   
         #close file_name
@@ -196,12 +196,13 @@ def connection(): # upload files, download bob_public_key
 
         # upload alice's public key, file, hash, session key
         # initiates a tftp upload to the configured remote host, uploading the filename passed.
-        for name in ("file_name", "alice_public_key.pem", FILE + ".sig", FILE + ".encrypted", "key.encrypted"):
+        for name in (TMPDIR + "file_name", TMPDIR + "alice_public_key.pem", TMPDIR + FILE + ".sig", TMPDIR + FILE + ".encrypted", TMPDIR + "key.encrypted"):
             client.upload(name, name)
 
-        client.download("files_received", "files_received")
-        time.sleep(.5)
-        if file_exists("files_received") == True:
+        time.sleep(.1)
+        client.download(TMPDIR + "files_received", TMPDIR + "files_received")
+         # /time.sleep()
+        if file_exists(TMPDIR + "files_received") == True:
             print("[*] Uploaded {alice_public_key.pem}")
             print("[*] Uploaded {{{}.sig}}, {{{}.encrypted}}, {{key.encrypted}}".format(FILE, FILE))
             print("[*] Bob received files")
@@ -211,26 +212,44 @@ def connection(): # upload files, download bob_public_key
 
 def connectionSuccessful():
     global client
-    while file_exists("file_decrypted") == False:
-        time.sleep(5)
-        client.download("file_decrypted", "file_decrypted")
-        if file_exists("file_decrypted") == True:
+    while file_exists(TMPDIR + "file_decrypted") == False:
+        time.sleep(30)
+        client.download(TMPDIR + "file_decrypted", TMPDIR + "file_decrypted")
+        if file_exists(TMPDIR + "file_decrypted") == True:
             print("[*] Bob decrypted files successfully")
             print("[*] Finished connection")
-            raise SystemExit
+
+def mkdir():
+    if os.path.isdir(TMPDIR) == False:
+        os.mkdir(TMPDIR)
+        # print("tmp/ directory created")
+    # else:
+        # print("tmp/ directory already exists")
+
+def rmfiles():
+    RMFILES = input("Would you like to remove temporary files? [Yes/No] ")
+    if RMFILES == "Yes" or RMFILES == "y":
+        os.rmdir(TMPDIR)
+        print("Temporary files removed")
+    else:
+        print("Temporary files not removed")
+    raise SystemExit
 
 if __name__ == '__main__':
     import tftpy
     import base64 # for base64 encoding
     import time
+    import os
 
     # HOST = input("Enter receiver ip: ")
-    HOST = "192.168.1.144"
+    HOST = "192.168.1.88"
     # PORT = int(input("Enter port: "))
     PORT = 5001
-    #FILE = input("Enter file to send to {}: ".format(HOST))
+    # FILE = input("Enter file to send to {}: ".format(HOST))
     FILE = "nagatoro.png"
+    TMPDIR = "tmp/"
 
+    mkdir()
     genPkcKey()
     f = Fernet(Fernet)
     f.genSkcKey()
@@ -243,3 +262,4 @@ if __name__ == '__main__':
     from os.path import exists as file_exists
     connection()
     connectionSuccessful()
+    rmfiles()
