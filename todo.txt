@@ -1,17 +1,19 @@
-[ok] 1. set FILE as global function in bob.py
+[ok] 0. set FILE as global function in bob.py
 https://stackoverflow.com/questions/10588317/python-function-global-variables
 
-[ok] 2. store all temporary files in tmp/, then delete them
+[ok] 0. store all temporary files in tmp/, then delete them
 https://stackoverflow.com/questions/6996603/how-do-i-delete-a-file-or-folder-in-python
 
-[ok] 3. fix { ValueError: Ciphertext length must be equal to key size }
+[ok] 0. fix { ValueError: Ciphertext length must be equal to key size }
 https://stackoverflow.com/questions/61522762/valueerror-ciphertext-length-must-be-equal-to-key-size
 https://libreddit.tiekoetter.com/r/learnpython/comments/kp29lq/cryptography_32_ciphertext_length_must_be_equal/
 
-4. set better prints
+[ok] 0. set better prints
 
-5. comment code better
+[ok] 0. show local / public ip in bob.py
 
-6. translate to catalan
+1. comment code better
 
-7. set help / options / tui [argparse]
+2. translate to catalan
+
+3. set help / options / tui [argparse] {example: https://www.thepythoncode.com/code/send-receive-files-using-sockets-python}
