@@ -58,7 +58,7 @@ class Fernet: # alice generates a random session key
         with open(TMPDIR + FILE + ".encrypted", "wb") as file:
             file.write(encrypted_data)
 
-        print("[*] {{{}}}.encrypted encrypted with session key".format(FILE))
+        print("[*] {{{}.encrypted}} encrypted with session key".format(FILE))
 
 def genHash(): # alice generates hash from file
     from hashlib import blake2b
@@ -83,7 +83,7 @@ def genHash(): # alice generates hash from file
     n = hash_file.write(HASH)
     hash_file.close()
 
-    print("[*] Hash generated from ({}) and written to {}.blake2b".format(FILE, FILE))
+    print("[*] Hash generated from {{{}}} and written to {{{}.blake2b}}".format(FILE, FILE))
 
 class EncryptHash: # alice encrypts hash w/ alice private key (signs file)
     def loadAlPrivateKey(self): # Load alice private key
@@ -211,13 +211,14 @@ def connection(): # upload files, download bob_public_key
             time.sleep(.5)
 
 def connectionSuccessful():
-    global client
-    while file_exists(TMPDIR + "file_decrypted") == False:
-        time.sleep(30)
-        client.download(TMPDIR + "file_decrypted", TMPDIR + "file_decrypted")
-        if file_exists(TMPDIR + "file_decrypted") == True:
-            print("[*] Bob decrypted files successfully")
-            print("[*] Finished connection")
+    # NOT NECESSARY
+    # global client
+    # while file_exists(TMPDIR + "file_decrypted") == False:
+    #     time.sleep(15)
+    #     Thread(client.download(TMPDIR + "file_decrypted", TMPDIR + "file_decrypted")).start()
+    #     if file_exists(TMPDIR + "file_decrypted") == True:
+    #         print("[*] Bob decrypted files successfully")
+    print("[*] Finished connection")
 
 def mkdir():
     if os.path.isdir(TMPDIR) == False:
@@ -227,26 +228,30 @@ def mkdir():
         # print("tmp/ directory already exists")
 
 def rmfiles():
-    RMFILES = input("Would you like to remove temporary files? [Yes/No] ")
-    if RMFILES == "Yes" or RMFILES == "y":
-        os.rmdir(TMPDIR)
-        print("Temporary files removed")
+    from shutil import rmtree
+    RMFILES = input("[*] Would you like to remove temporary files? [Yes/No] ")
+    if RMFILES == "Yes" or RMFILES == "y" or RMFILES == "":
+        # os.rmdir(TMPDIR)
+        rmtree(TMPDIR)
+        print("[*] Temporary files removed")
     else:
-        print("Temporary files not removed")
+        print("[*] Temporary files not removed")
     raise SystemExit
 
 if __name__ == '__main__':
     import tftpy
-    import base64 # for base64 encoding
     import time
+    import base64 # for base64 encoding
+    from threading import Thread
+    from os.path import exists as file_exists
     import os
 
-    # HOST = input("Enter receiver ip: ")
-    HOST = "192.168.52.46"
-    # PORT = int(input("Enter port: "))
-    PORT = 5001
-    # FILE = input("Enter file to send to {}: ".format(HOST))
-    FILE = "test.txt"
+    HOST = input("Enter receiver ip: ")
+    # HOST = "192.168.1.88"
+    PORT = int(input("Enter port: "))
+    # PORT = 5001
+    FILE = input("Enter file to send to {}: ".format(HOST))
+    # FILE = "nagatoro.png"
     TMPDIR = "tmp/"
 
     mkdir()
@@ -259,7 +264,6 @@ if __name__ == '__main__':
     e.loadAlPrivateKey()
     e.signHash()
     establishConnection()
-    from os.path import exists as file_exists
     connection()
     connectionSuccessful()
     rmfiles()
