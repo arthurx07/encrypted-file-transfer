@@ -77,6 +77,7 @@ def loadBobPrivateKey(): # Loads bob private key
     from cryptography.hazmat.backends import default_backend
     # Load bob private key
 
+    global private_key
     with open(TMPDIR + "bob_private_key.pem", "rb") as key_file:
         private_key = serialization.load_pem_private_key(
             key_file.read(),
@@ -84,14 +85,14 @@ def loadBobPrivateKey(): # Loads bob private key
             backend=default_backend()
         )
 
-    return private_key
     print("[*] Loaded {bob_private_key.pem}")
 
 def decryptSkcKey(): # Decrypt session key
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import padding
 
-    private_key = loadBobPrivateKey()
+    global private_key
+    # private_key = loadBobPrivateKey()
     with open(TMPDIR + 'key.encrypted', "rb") as f:
         for encrypted in f:
             decrypted = private_key.decrypt(
@@ -118,6 +119,13 @@ def decryptFile(): # bob decrypts file w/ session key
 
     global key
     global FILE
+
+    while True:
+        if file_exists(TMPDIR + "file_name") == True:
+            time.sleep(.1)
+            with open(TMPDIR + 'file_name', 'r') as file:
+                FILE = file.read().rstrip()
+            break
     f = Fernet(key)
     with open(TMPDIR + FILE + ".encrypted", "rb") as file:
         # read the encrypted data
@@ -238,7 +246,8 @@ if __name__ == '__main__':
     s = Server()
     Thread(target = s.establishConnection).start()
     while True: 
-        if file_exists("key.encrypted") == True:
+        if file_exists(TMPDIR + "key.encrypted") == True:
+            time.sleep(5)
             decryptSkcKey()
             loadSkcKey()
             decryptFile()
@@ -251,5 +260,3 @@ if __name__ == '__main__':
             rmfiles()
         else:
             pass
-
-

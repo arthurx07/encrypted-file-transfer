@@ -58,7 +58,7 @@ class Fernet: # alice generates a random session key
         with open(TMPDIR + FILE + ".encrypted", "wb") as file:
             file.write(encrypted_data)
 
-        print("[*] {}.encrypted encrypted with session key".format(FILE))
+        print("[*] {{{}}}.encrypted encrypted with session key".format(FILE))
 
 def genHash(): # alice generates hash from file
     from hashlib import blake2b
@@ -242,11 +242,11 @@ if __name__ == '__main__':
     import os
 
     # HOST = input("Enter receiver ip: ")
-    HOST = "192.168.1.88"
+    HOST = "192.168.52.46"
     # PORT = int(input("Enter port: "))
     PORT = 5001
     # FILE = input("Enter file to send to {}: ".format(HOST))
-    FILE = "nagatoro.png"
+    FILE = "test.txt"
     TMPDIR = "tmp/"
 
     mkdir()
