@@ -32,21 +32,28 @@ def genPkcKey(): # Generating bob's key
     print("[*] Public and private keys stored as {bob_p*_key}")
 
 class Server:
-    global FILE
     def establishConnection(self): # bob establishes a connection with alice
         # device's IP address
         SERVER_HOST = "0.0.0.0" #means all ipv4 addresses that are on the local machine
         SERVER_PORT = 5001
 
+        import socket
+        LOCAL_IP = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) + ["no IP found"])[0]
+        # code from https://stackoverflow.com/a/1267524
+
+        # from requests import get
+        # PUBLIC_IP = get('https://api.ipify.org').content.decode('utf8')        
+
         # create the server tftpy
         self.server = tftpy.TftpServer('.')
-        print("[*] Tftp server created with host {} on port {}".format(SERVER_HOST, SERVER_PORT))
+        print("[*] Tftp server created with host {} on port {}".format(LOCAL_IP, SERVER_PORT))
 
         print("[*] Listening, waiting for other devices to connect and send files")
         Thread(target = s.connection).start()
         self.server.listen(SERVER_HOST, SERVER_PORT) # todo: stop server after sending all files
 
     def connection(self):
+        global FILE
         while True:
             if file_exists(TMPDIR + "file_name") == True:
                 time.sleep(.1)
@@ -60,15 +67,15 @@ class Server:
                 file.close()
                 print("[*] Connection successful. {{{}}} received, starting decryption.".format(FILE))
                 break
-        return FILE
 
     def connectionSuccessful(self):
-        print(FILE)
         while True: 
             if file_exists(FILE) == True:
                 file = open(TMPDIR + "file_decrypted", "w")
                 file.write("this file will be deleted")
                 file.close()
+                break
+            print("[*] {{{}}} received successfully".format(FILE))
         print("[*] Finished connection")
         self.server.stop()
 
@@ -92,17 +99,21 @@ def decryptSkcKey(): # Decrypt session key
     from cryptography.hazmat.primitives.asymmetric import padding
 
     global private_key
-    # private_key = loadBobPrivateKey()
-    with open(TMPDIR + 'key.encrypted', "rb") as f:
-        for encrypted in f:
-            decrypted = private_key.decrypt(
-                encrypted,
-                padding.OAEP(
-                    mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                    algorithm=hashes.SHA256(),
-                    label=None
-                )
+    # if doesn't work add time.sleep(1) to wait receiving all file contents or use if len(encrypted) == "256":
+    while True: # else file has not been completely sent //error: Ciphertext length must be equal to key size //
+        with open(TMPDIR + 'key.encrypted', "rb") as f:
+            encrypted = f.read()
+        if len(encrypted) == "256":
+            print("ok")
+        decrypted = private_key.decrypt(
+            encrypted,
+            padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None
             )
+        )
+        break
     with open(TMPDIR + 'key.key', "wb") as f: f.write(decrypted)
 
     print("[*] Decrypted {key.encrypted} and written into {key.key}")
@@ -120,12 +131,6 @@ def decryptFile(): # bob decrypts file w/ session key
     global key
     global FILE
 
-    while True:
-        if file_exists(TMPDIR + "file_name") == True:
-            time.sleep(.1)
-            with open(TMPDIR + 'file_name', 'r') as file:
-                FILE = file.read().rstrip()
-            break
     f = Fernet(key)
     with open(TMPDIR + FILE + ".encrypted", "rb") as file:
         # read the encrypted data
@@ -140,7 +145,7 @@ def decryptFile(): # bob decrypts file w/ session key
     with open(FILE, "wb") as file:
         file.write(decrypted_data)
 
-    print("[*] {} decrypted and stored".format(FILE))
+    print("[*] {{{}}} decrypted and stored".format(FILE))
 
 def genHash(): # bob generates blake2b hash from file
     global FILE
@@ -166,7 +171,7 @@ def genHash(): # bob generates blake2b hash from file
     n = hash_file.write(HASH)
     hash_file.close()
 
-    print("[*] Hash generated from ({}) and writtento {}.blake2b".format(FILE, FILE))
+    print("[*] Hash generated from {{{}}} and written to {{{}.blake2b}}".format(FILE, FILE))
 
 class Verify: # bob verifies file (decrypts hash, generates hash from file, compares)
     global FILE
@@ -221,12 +226,14 @@ def mkdir():
         # print("tmp/ directory already exists")
 
 def rmfiles():
-    RMFILES = input("Would you like to remove temporary files? [Yes/No] ")
-    if RMFILES == "Yes" or RMFILES == "y":
-        os.rmdir(TMPDIR)
-        print("Temporary files removed")
+    from shutil import rmtree
+    RMFILES = input("[*] Would you like to remove temporary files? [Yes/No] ")
+    if RMFILES == "Yes" or RMFILES == "y" or RMFILES == "":
+        # os.rmdir(TMPDIR)
+        rmtree(TMPDIR)
+        print("[*] Temporary files removed")
     else:
-        print("Temporary files not removed")
+        print("[*] Temporary files not removed")
     raise SystemExit
 
 
@@ -247,7 +254,7 @@ if __name__ == '__main__':
     Thread(target = s.establishConnection).start()
     while True: 
         if file_exists(TMPDIR + "key.encrypted") == True:
-            time.sleep(5)
+            time.sleep(.1)
             decryptSkcKey()
             loadSkcKey()
             decryptFile()
