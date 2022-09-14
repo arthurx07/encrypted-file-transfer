@@ -20,6 +20,8 @@ https://libreddit.tiekoetter.com/r/learnpython/comments/kp29lq/cryptography_32_c
 
 3. translate to catalan
 
-2. file handling, close opened files with file.close()
+1. file handling, close opened files with file.close()
 
-1. loading animation
+2. loading animation
+
+?. change file extensions

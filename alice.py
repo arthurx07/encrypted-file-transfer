@@ -229,6 +229,7 @@ if __name__ == '__main__':
     import os
     import time
     import tftpy
+    import base64 # For base64 encoding
     import logging
     import argparse
     from threading import Thread

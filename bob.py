@@ -195,7 +195,7 @@ class Verify: # Bob verifies file (decrypts hash, generates hash from file (befo
         with open(TMPDIR + FILE + ".sig", 'rb') as f:
             self.signature = base64.b64decode(f.read())
 
-        loggin.info("Loaded {{{}.blake2b}} and {{{}.sig}}".format(FILE, FILE))
+        logging.info("Loaded {{{}.blake2b}} and {{{}.sig}}".format(FILE, FILE))
 
     def verification(self):
         from cryptography.hazmat.primitives.asymmetric import padding
@@ -239,6 +239,7 @@ if __name__ == '__main__':
     import sys
     import time
     import tftpy
+    import base64 # for base64 decoding
     import logging
     import argparse
     from threading import Thread
