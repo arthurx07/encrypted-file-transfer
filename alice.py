@@ -245,14 +245,19 @@ if __name__ == '__main__':
     from threading import Thread
     from os.path import exists as file_exists
     import os
+    import argparse
 
-    HOST = input("Enter receiver ip: ")
-    # HOST = "192.168.1.88"
-    PORT = int(input("Enter port: "))
-    # PORT = 5001
-    FILE = input("Enter file to send to {}: ".format(HOST))
-    # FILE = "nagatoro.png"
-    TMPDIR = "tmp/"
+    parser = argparse.ArgumentParser(description="Encrypted File Sender")
+    parser.add_argument("file", help="File name to send")
+    parser.add_argument("host", help="The host/IP address of the receiver")
+    parser.add_argument("-p", "--port", help="Port to use, default is 5001", default=5001)
+    parser.add_argument("-d", "--directory", help="Directory to store temporary files, default is tmp/", default="tmp/")
+    args = parser.parse_args()
+
+    FILE = args.file
+    HOST = args.host
+    PORT = args.port
+    TMPDIR = args.directory
 
     mkdir()
     genPkcKey()

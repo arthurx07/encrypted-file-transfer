@@ -12,8 +12,10 @@ https://libreddit.tiekoetter.com/r/learnpython/comments/kp29lq/cryptography_32_c
 
 [ok] 0. show local / public ip in bob.py
 
+[ok] 0. set help / options [argparse] {example: https://www.thepythoncode.com/code/send-receive-files-using-sockets-python}
+
 1. comment code better
 
 2. translate to catalan
 
-3. set help / options / tui [argparse] {example: https://www.thepythoncode.com/code/send-receive-files-using-sockets-python}
+3. tui

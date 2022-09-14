@@ -35,7 +35,6 @@ class Server:
     def establishConnection(self): # bob establishes a connection with alice
         # device's IP address
         SERVER_HOST = "0.0.0.0" #means all ipv4 addresses that are on the local machine
-        SERVER_PORT = 5001
 
         import socket
         LOCAL_IP = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2] if not ip.startswith("127.")] or [[(s.connect(("8.8.8.8", 53)), s.getsockname()[0], s.close()) for s in [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]]) + ["no IP found"])[0]
@@ -244,8 +243,15 @@ if __name__ == '__main__':
     from threading import Thread
     from os.path import exists as file_exists
     import os
+    import argparse
 
-    TMPDIR = "tmp/"
+    parser = argparse.ArgumentParser(description="Encrypted File Receiver")
+    parser.add_argument("-p", "--port", help="Port to use, default is 5001", default=5001)
+    parser.add_argument("-d", "--dir", help="Directory to store temporary files, default is tmp/", default="tmp/")
+    args = parser.parse_args()
+
+    TMPDIR = args.dir
+    SERVER_PORT = args.port
 
     mkdir()
     genPkcKey()
