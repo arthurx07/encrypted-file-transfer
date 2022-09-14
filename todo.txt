@@ -16,8 +16,10 @@ https://libreddit.tiekoetter.com/r/learnpython/comments/kp29lq/cryptography_32_c
 
 [ok] 0. convert print to logs
 
-3. comment code better
+[ok] 0. comment code better
 
-2. translate to catalan
+3. translate to catalan
+
+2. file handling, close opened files with file.close()
 
 1. loading animation
