@@ -16,6 +16,8 @@ https://libreddit.tiekoetter.com/r/learnpython/comments/kp29lq/cryptography_32_c
 
 1. comment code better
 
-2. translate to catalan
+2. convert print to logs
 
-3. tui
+3. translate to catalan
+
+4. loading animation
