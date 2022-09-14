@@ -1,0 +1,2 @@
+https://stackoverflow.com/questions/22029562/python-how-to-make-simple-animated-loading-while-process-is-running
+https://stackoverflow.com/questions/71222803/cannot-kill-a-loading-animation-when-using-multiprocessing
