@@ -66,7 +66,7 @@ class Server:
                 break
         # Check if received all files and send confirmation to Bob
         while True:
-            if os.path.exists(f'{TMPDIR}/alice_public_key.pem') == True and file_exists(f'{TMPDIR}/{FILE}.sig') == True and file_exists(f'{TMPDIR}/{FILE}.encrypted') == True and file_exists(f'{TMPDIR}/key.encrypted') == True:
+            if os.path.exists(f'{TMPDIR}/alice_public_key.pem') == True and os.path.exists(f'{TMPDIR}/{FILE}.sig') == True and os.path.exists(f'{TMPDIR}/{FILE}.encrypted') == True and os.path.exists(f'{TMPDIR}/key.encrypted') == True:
                 with open(f'{TMPDIR}/files_received', 'w') as file:
                     file.write("temporary file")
                 logging.info(f"Connection successful. [{FILE}] received, starting decryption.")

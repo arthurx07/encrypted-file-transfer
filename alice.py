@@ -220,7 +220,7 @@ def rmfiles():
         rmtree(TMPDIR)
         logging.info("Temporary files removed")
     else:
-        logging.warning("Temporary files not removed")
+        logging.info("Temporary files not removed")
     raise SystemExit
 
 def logger():
