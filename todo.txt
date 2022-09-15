@@ -1,18 +1,19 @@
-[ok] 0. set FILE as global function in bob.py
+[ok] 0. set FILE as global function in bob.py (12/09/22)
 https://stackoverflow.com/questions/10588317/python-function-global-variables
 
-[ok] 0. store all temporary files in tmp/, then delete them
+[ok] 0. store all temporary files in tmp/, then delete them (12/09/22)
 https://stackoverflow.com/questions/6996603/how-do-i-delete-a-file-or-folder-in-python
 
-[ok] 0. fix { ValueError: Ciphertext length must be equal to key size }
+[ok] 0. fix { ValueError: Ciphertext length must be equal to key size } (13/09/22)
 https://stackoverflow.com/questions/61522762/valueerror-ciphertext-length-must-be-equal-to-key-size
 https://libreddit.tiekoetter.com/r/learnpython/comments/kp29lq/cryptography_32_ciphertext_length_must_be_equal/
 
-[ok] 0. set better prints
+[ok] 0. set better prints (13/09/22)
 
-[ok] 0. show local / public ip in bob.py
+[ok] 0. show local / public ip in bob.py (13/09/22)
 
-[ok] 0. set help / options [argparse] {example: https://www.thepythoncode.com/code/send-receive-files-using-sockets-python}
+[ok] 0. set help / options [argparse] {example: (14/09/22)
+https://www.thepythoncode.com/code/send-receive-files-using-sockets-python}
 
 [ok] 0. convert print to logs (14/09/22)
 
@@ -24,4 +25,6 @@ https://libreddit.tiekoetter.com/r/learnpython/comments/kp29lq/cryptography_32_c
 
 [ok] 0. loading animation (15/09/22)
 
-2. translate to catalan
+[ok] 0. translate to catalan (15/09/22)
+
+0. skc file tranfer, option to save key.key
