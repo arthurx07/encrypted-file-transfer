@@ -215,11 +215,13 @@ def mkdir():
 def rmfiles():
     # Remove rmdir recursively, with temporary files inside
     from shutil import rmtree
-    if SAVE_FILES == False:
+    RMFILES = input("[*] Would you like to remove temporary files? [Yes/No] ")
+    if RMFILES == "Yes" or RMFILES == "y" or RMFILES == "":
         rmtree(TMPDIR)
         logging.info("Temporary files removed")
     else:
         logging.info("Temporary files not removed")
+    raise SystemExit
 
 def logger():
     # Logger
@@ -237,13 +239,27 @@ def logger():
     elif LOG == False:
         logging.basicConfig(level = logging.WARNING, format = '[*] %(message)s')
 
+def progress():
+    import sys
+    print("Loading:")
+
+
+# animation = ["10%", "20%", "30%", "40%", "50%", "60%", "70%", "80%", "90%", "100%"]
+    animation = ["[■□□□□□□□□□]","[■■□□□□□□□□]", "[■■■□□□□□□□]", "[■■■■□□□□□□]", "[■■■■■□□□□□]", "[■■■■■■□□□□]", "[■■■■■■■□□□]", "[■■■■■■■■□□]", "[■■■■■■■■■□]", "[■■■■■■■■■■]"]
+
+    for i in range(len(animation)):
+        sleep(0.2)
+        sys.stdout.write("\r" + animation[i % len(animation)])
+        sys.stdout.flush()
+
+    print("\n")
+
 
 if __name__ == '__main__':
     # Imports
     import os
     import logging
     import argparse
-    from tqdm import tqdm
     from time import sleep
     from threading import Thread
 
@@ -254,7 +270,6 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--port", help="Port to use, default is 5001", default=5001)
     parser.add_argument("-d", "--directory", help="Directory to store temporary files, default is tmp/", default="tmp/")
     parser.add_argument("-l", "--log", help="Enable debugging", action='store_true')
-    parser.add_argument("-s", "--save", help="Save temporary files", action="store_true")
     args = parser.parse_args()
 
     # Define global variables
@@ -263,17 +278,21 @@ if __name__ == '__main__':
     PORT = args.port
     TMPDIR = args.directory
     LOG = args.log
-    SAVE_FILES = args.save
+
+    Thread(target = progress).start()
 
     logger()
 
+    mkdir()
+    genPkcKey()
     f = Fernet(Fernet)
+    f.genSkcKey()
+    genHash()
+    f.encryptFile()
     e = EncryptHash()
-
-    myfunctions = [ mkdir, genPkcKey, f.genSkcKey, genHash, f.encryptFile, e.loadAlPrivateKey, e.signHash, establishConnection, connection, connectionSuccessful, rmfiles ]
-
-    for i in tqdm(myfunctions):
-        i()
-        sleep(.1)
-        if i == "rmfiles":
-            raise SystemExit
+    e.loadAlPrivateKey()
+    e.signHash()
+    establishConnection()
+    connection()
+    connectionSuccessful()
+    rmfiles()

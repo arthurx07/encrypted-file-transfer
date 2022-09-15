@@ -248,6 +248,48 @@ def logger():
     elif LOG == False:
         logging.basicConfig(level = logging.WARNING, format = '[*] %(message)s')
 
+class Loader: # Small loading dots animation
+    def __init__(self, desc="Loading...", end="Done!", timeout=0.1):
+        """
+        A loader-like context manager
+
+        Args:
+            desc (str, optional): The loader's description. Defaults to "Loading...".
+            end (str, optional): Final print. Defaults to "Done!".
+            timeout (float, optional): Sleep time between prints. Defaults to 0.1.
+        """
+        self.desc = desc
+        self.end = end
+        self.timeout = timeout
+
+        self._thread = Thread(target=self._animate, daemon=True)
+        self.steps = ["⢿", "⣻", "⣽", "⣾", "⣷", "⣯", "⣟", "⡿"]
+        self.done = False
+
+    def start(self):
+        self._thread.start()
+        return self
+
+    def _animate(self):
+        for c in cycle(self.steps):
+            if self.done:
+                break
+            print(f"\r{self.desc} {c}", flush=True, end="")
+            sleep(self.timeout)
+
+    def __enter__(self):
+        self.start()
+
+    def stop(self):
+        self.done = True
+        cols = get_terminal_size((80, 20)).columns
+        print("\r" + " " * cols, end="", flush=True)
+        print(f"\r{self.end}", flush=True)
+
+    def __exit__(self, exc_type, exc_value, tb):
+        # handle exceptions with those variables ^
+        self.stop()
+
 if __name__ == '__main__':
     # Imports
     import os
@@ -255,14 +297,16 @@ if __name__ == '__main__':
     import argparse
     from tqdm import tqdm
     from time import sleep
+    from itertools import cycle
     from threading import Thread
+    from shutil import get_terminal_size
 
     # Define argument parser for easier utilization
     parser = argparse.ArgumentParser(description="Encrypted File Receiver")
     parser.add_argument("-p", "--port", help="Port to use, default is 5001", default=5001)
     parser.add_argument("-d", "--dir", help="Directory to store temporary files, default is tmp/", default="tmp/")
     parser.add_argument("-l", "--log", help="Enable debugging", action='store_true')
-    parser.add_argument("-s", "--save", help="Save temporary files", action="store_true", default="store_false")
+    parser.add_argument("-s", "--save", help="Save temporary files", action="store_true")
     args = parser.parse_args()
 
     # Define global variables
@@ -273,21 +317,27 @@ if __name__ == '__main__':
 
     logger()
 
-    print("Establishing connection ...")
     mkdir()
     genPkcKey()
     loadBobPrivateKey()
     s = Server()
     Thread(target = s.establishConnection).start()
-    while os.path.exists(f'{TMPDIR}/key.encrypted') == False: 
-        if os.path.exists(f'{TMPDIR}/key.encrypted') == True:
-            # print("Decrypting file ... ")
+    sleep(.1)
+    loader = Loader("[*] Establishing connection...", "").start()
+    while True:
+        if os.path.exists(f'{TMPDIR}key.encrypted') == True:
+            loader.stop()
+            # loader = Loader("[*] Decrypting file...", "").start()
+            logging.warning("Decrypting file...")
+
             sleep(.1)
             v = Verify()
             myfunctions = [ decryptSkcKey, loadSkcKey, decryptFile, genHash, v.loadAlPublicKey, v.loadHashSig, v.verification, s.connectionSuccessful, rmfiles ] 
 
             for i in tqdm(myfunctions):
                 i()
-                sleep(1)
+                sleep(.1)
+            break
         else:
             pass
+    raise SystemExit
