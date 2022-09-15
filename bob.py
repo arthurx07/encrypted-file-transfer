@@ -20,20 +20,21 @@ def genPkcKey():
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption()
         )
-    with open(TMPDIR + 'bob_private_key.pem', 'wb') as f:
+    with open(f'{TMPDIR}/bob_private_key.pem', 'wb') as f:
         f.write(private_pem)
 
     public_pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
         )
-    with open(TMPDIR + 'bob_public_key.pem', 'wb') as f:
+    with open(f'{TMPDIR}/bob_public_key.pem', 'wb') as f:
         f.write(public_pem)
 
-    logging.info("Public and private keys stored as {bob_public/private_key}")
+    logging.info("Public and private keys stored as [bob_public/private_key]")
 
 class Server:
     def establishConnection(self): # Bob establishes a connection with alice
+        import tftpy
         # Device's IP address
         SERVER_HOST = "0.0.0.0" # means all ipv4 addresses that are on the local machine
         # SERVER_PORT (defined as global variable)
@@ -47,7 +48,7 @@ class Server:
 
         # Create tftpy server
         self.server = tftpy.TftpServer('.')
-        logging.warning("Tftp server created with host {} on port {}".format(LOCAL_IP, SERVER_PORT))
+        logging.warning(f"Tftp server created with host {LOCAL_IP} on port {SERVER_PORT}")
 
         # Server waiting for receiving files
         logging.info("Listening, waiting for other devices to connect and send files")
@@ -58,23 +59,22 @@ class Server:
         global FILE
         # Define FILE variable from file_name contents
         while True:
-            if file_exists(TMPDIR + "file_name") == True:
-                time.sleep(.1)
-                with open(TMPDIR + 'file_name', 'r') as file:
+            if file_exists(f'{TMPDIR}/file_name') == True:
+                sleep(.1)
+                with open(f'{TMPDIR}/file_name', 'r') as file:
                     FILE = file.read().rstrip()
                 break
         # Check if received all files and send confirmation to Bob
         while True:
-            if file_exists(TMPDIR + "alice_public_key.pem") == True and file_exists(TMPDIR + FILE + ".sig") == True and file_exists(TMPDIR + FILE + ".encrypted") == True and file_exists(TMPDIR + "key.encrypted") == True:
-                file = open(TMPDIR + "files_received", "w")
-                file.write("this file will be deleted")
-                file.close()
-                logging.info("Connection successful. {{{}}} received, starting decryption.".format(FILE))
+            if file_exists(f'{TMPDIR}/alice_public_key.pem') == True and file_exists(f'{TMPDIR}/{FILE}.sig') == True and file_exists(f'{TMPDIR}/{FILE}.encrypted') == True and file_exists(f'{TMPDIR}/key.encrypted') == True:
+                with open(f'{TMPDIR}/files_received', 'w') as file:
+                    file.write("temporary file")
+                logging.info(f"Connection successful. [{FILE}] received, starting decryption.")
                 break
 
     def connectionSuccessful(self):
         if file_exists(FILE) == True:
-            logging.info("{{{}}} received successfully".format(FILE))
+            logging.info(f"[{FILE}] received successfully")
         logging.info("Finished connection")
         self.server.stop()
 
@@ -84,14 +84,14 @@ def loadBobPrivateKey(): # Loads bob private key
     
     # Load bob private key
     global private_key
-    with open(TMPDIR + "bob_private_key.pem", "rb") as key_file:
+    with open(f'{TMPDIR}/bob_private_key.pem', 'rb') as key_file:
         private_key = serialization.load_pem_private_key(
             key_file.read(),
             password=None,
             backend=default_backend()
         )
 
-    logging.info("Loaded {bob_private_key.pem}")
+    logging.info("Loaded [bob_private_key.pem]")
 
 def decryptSkcKey(): # Decrypt session key
     from cryptography.hazmat.primitives import hashes
@@ -100,7 +100,7 @@ def decryptSkcKey(): # Decrypt session key
     global private_key
     # If doesn't work add time.sleep(1) to wait receiving all file contents or use if len(encrypted) == "256":
     while True: # Else file has not been completely sent // error: Ciphertext length must be equal to key size //
-        with open(TMPDIR + 'key.encrypted', "rb") as f:
+        with open(f'{TMPDIR}/key.encrypted', 'rb') as f:
             encrypted = f.read()
         # if len(encrypted) == "256": # Won't print, if statement not working
         #     logging.debug("Fully received {key.encrypted}")
@@ -113,15 +113,17 @@ def decryptSkcKey(): # Decrypt session key
             )
         )
         break
-    with open(TMPDIR + 'key.key', "wb") as f: f.write(decrypted)
+    with open(f'{TMPDIR}/key.key', 'wb') as f:
+        f.write(decrypted)
 
-    logging.info("Decrypted {key.encrypted} and written into {key.key}")
+    logging.info("Decrypted [key.encrypted] and written into [key.key]")
 
 def loadSkcKey(): # Loads the key from the current directory named `key.key`
     global key
-    key = open(TMPDIR + "key.key", "rb").read()
+    with open(f'{TMPDIR}/key.key', 'rb') as f:
+        key = f.read()
 
-    logging.info("Loaded {key.key}")
+    logging.info("Loaded [key.key]")
 
 def decryptFile(): # Bob decrypts file w/ session key
     # Given a filename (str) and key (bytes), it decripts the file and write it
@@ -131,20 +133,20 @@ def decryptFile(): # Bob decrypts file w/ session key
     global FILE
 
     f = Fernet(key)
-    with open(TMPDIR + FILE + ".encrypted", "rb") as file:
+    with open(f'{TMPDIR}/{FILE}.encrypted', 'rb') as file:
         # Read the encrypted data
         encrypted_data = file.read()
 
-    logging.info("Loaded {{{}.encrypted}}".format(FILE))
+    logging.info(f"Loaded [{FILE}.encrypted]")
 
     # Decrypt data
     decrypted_data = f.decrypt(encrypted_data)
 
     # Write the original file
-    with open(FILE, "wb") as file:
+    with open(FILE, 'wb') as file:
         file.write(decrypted_data)
 
-    logging.info("{{{}}} decrypted and stored".format(FILE))
+    logging.info(f"[{FILE}] decrypted and stored")
 
 def genHash(): # Bob generates blake2b hash from blake2b.encrypted
     global FILE
@@ -161,14 +163,13 @@ def genHash(): # Bob generates blake2b hash from blake2b.encrypted
                 break
             blake2.update(data)
 
-    HASH = "{0}".format(blake2.hexdigest())
+    HASH = '{0}'.format(blake2.hexdigest())
 
     # Write hash to file
-    hash_file = open(TMPDIR + FILE + ".blake2b", "w")
-    n = hash_file.write(HASH)
-    hash_file.close()
+    with open(f'{TMPDIR}/{FILE}.blake2b', 'w') as hash_file:
+        hash_file.write(HASH)
 
-    logging.info("Hash generated from {{{}}} and written to {{{}.blake2b}}".format(FILE, FILE))
+    logging.info(f"Hash generated from [{FILE}] and written to [{FILE}.blake2b]")
 
 class Verify: # Bob verifies file (decrypts hash, generates hash from file (before), compares)
     global FILE
@@ -183,19 +184,20 @@ class Verify: # Bob verifies file (decrypts hash, generates hash from file (befo
         from cryptography.hazmat.backends import default_backend
 
         # Load the public key.
-        with open(TMPDIR + 'alice_public_key.pem', 'rb') as f:
+        with open(f'{TMPDIR}/alice_public_key.pem', 'rb') as f:
             self.public_key = load_pem_public_key(f.read(), default_backend())
 
-        logging.info("Loaded {alice_public_key.pem}")
+        logging.info("Loaded [alice_public_key.pem]")
 
     def loadHashSig(self):
+        import base64 # for base64 decoding
         # Load the payload contents and the signature.
-        with open(TMPDIR + FILE + ".blake2b", 'rb') as f:
+        with open(f'{TMPDIR}/{FILE}.blake2b', 'rb') as f:
             self.payload_contents = f.read()
-        with open(TMPDIR + FILE + ".sig", 'rb') as f:
+        with open(f'{TMPDIR}/{FILE}.sig', 'rb') as f:
             self.signature = base64.b64decode(f.read())
 
-        logging.info("Loaded {{{}.blake2b}} and {{{}.sig}}".format(FILE, FILE))
+        logging.info(f"Loaded [{FILE}.blake2b] and [{FILE}.sig]")
 
     def verification(self):
         from cryptography.hazmat.primitives.asymmetric import padding
@@ -212,9 +214,9 @@ class Verify: # Bob verifies file (decrypts hash, generates hash from file (befo
                 ),
                 hashes.SHA256(),
             )
-            logging.info("{{{}}} verification succeeded".format(FILE))
+            logging.info(f"[{FILE}] verification succeeded")
         except cryptography.exceptions.InvalidSignature as e:
-            logging.error('Payload and/or signature files failed verification!')
+            logging.error("Payload and/or signature files failed verification!")
 
 def mkdir():
     # Create tmpdir
@@ -232,32 +234,7 @@ def rmfiles():
         logging.info("Temporary files not removed")
     raise SystemExit
 
-
-if __name__ == '__main__':
-    # Imports
-    import os
-    import sys
-    import time
-    import tftpy
-    import base64 # for base64 decoding
-    import logging
-    import argparse
-    from threading import Thread
-    from os.path import exists as file_exists
-
-    # Define argument parser for easier utilization
-    parser = argparse.ArgumentParser(description="Encrypted File Receiver")
-    parser.add_argument("-p", "--port", help="Port to use, default is 5001", default=5001)
-    parser.add_argument("-d", "--dir", help="Directory to store temporary files, default is tmp/", default="tmp/")
-    parser.add_argument("-l", "--log", help="Enable debugging", action='store_true')
-    args = parser.parse_args()
-
-    # Define global variables
-    TMPDIR = args.dir
-    SERVER_PORT = args.port
-    LOG = args.log
-
-
+def logger():
     # Logger
     if LOG == True:
         logging.root.handlers = []
@@ -273,6 +250,29 @@ if __name__ == '__main__':
     elif LOG == False:
         logging.basicConfig(level = logging.WARNING, format = '[*] %(message)s')
 
+if __name__ == '__main__':
+    # Imports
+    import os
+    import logging
+    import argparse
+    from time import sleep
+    from threading import Thread
+    from os.path import exists as file_exists
+
+    # Define argument parser for easier utilization
+    parser = argparse.ArgumentParser(description="Encrypted File Receiver")
+    parser.add_argument("-p", "--port", help="Port to use, default is 5001", default=5001)
+    parser.add_argument("-d", "--dir", help="Directory to store temporary files, default is tmp/", default="tmp/")
+    parser.add_argument("-l", "--log", help="Enable debugging", action='store_true')
+    args = parser.parse_args()
+
+    # Define global variables
+    TMPDIR = args.dir
+    SERVER_PORT = args.port
+    LOG = args.log
+
+    logger()
+
     mkdir()
     genPkcKey()
     loadBobPrivateKey()
@@ -280,7 +280,7 @@ if __name__ == '__main__':
     Thread(target = s.establishConnection).start()
     while True: 
         if file_exists(TMPDIR + "key.encrypted") == True:
-            time.sleep(.1)
+            sleep(.1)
             decryptSkcKey()
             loadSkcKey()
             decryptFile()

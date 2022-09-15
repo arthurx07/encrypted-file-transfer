@@ -1,5 +1,4 @@
 from time import sleep
-k='#'
 j=0
 k='#'
 def fixed_space(i,array):
