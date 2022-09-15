@@ -59,21 +59,21 @@ class Server:
         global FILE
         # Define FILE variable from file_name contents
         while True:
-            if file_exists(f'{TMPDIR}/file_name') == True:
+            if os.path.exists(f'{TMPDIR}/file_name') == True:
                 sleep(.1)
                 with open(f'{TMPDIR}/file_name', 'r') as file:
                     FILE = file.read().rstrip()
                 break
         # Check if received all files and send confirmation to Bob
         while True:
-            if file_exists(f'{TMPDIR}/alice_public_key.pem') == True and file_exists(f'{TMPDIR}/{FILE}.sig') == True and file_exists(f'{TMPDIR}/{FILE}.encrypted') == True and file_exists(f'{TMPDIR}/key.encrypted') == True:
+            if os.path.exists(f'{TMPDIR}/alice_public_key.pem') == True and file_exists(f'{TMPDIR}/{FILE}.sig') == True and file_exists(f'{TMPDIR}/{FILE}.encrypted') == True and file_exists(f'{TMPDIR}/key.encrypted') == True:
                 with open(f'{TMPDIR}/files_received', 'w') as file:
                     file.write("temporary file")
                 logging.info(f"Connection successful. [{FILE}] received, starting decryption.")
                 break
 
     def connectionSuccessful(self):
-        if file_exists(FILE) == True:
+        if os.path.exists(FILE) == True:
             logging.info(f"[{FILE}] received successfully")
         logging.info("Finished connection")
         self.server.stop()
@@ -257,7 +257,6 @@ if __name__ == '__main__':
     import argparse
     from time import sleep
     from threading import Thread
-    from os.path import exists as file_exists
 
     # Define argument parser for easier utilization
     parser = argparse.ArgumentParser(description="Encrypted File Receiver")
@@ -279,7 +278,7 @@ if __name__ == '__main__':
     s = Server()
     Thread(target = s.establishConnection).start()
     while True: 
-        if file_exists(TMPDIR + "key.encrypted") == True:
+        if os.path.exists(TMPDIR + "key.encrypted") == True:
             sleep(.1)
             decryptSkcKey()
             loadSkcKey()

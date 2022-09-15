@@ -172,17 +172,17 @@ def establishConnection(): # Create tftpy client
 
 def connection(): # Upload files, download bob_public_key
     global client
-    while file_exists(f'{TMPDIR}/key.encrypted') == False:
+    while os.path.exists(f'{TMPDIR}/key.encrypted') == False:
         # Download bob's public key
         # Initiates a tftp download from the configured remote host, requesting the filename passed
         client.download(f'{TMPDIR}/bob_public_key.pem', f'{TMPDIR}/bob_public_key.pem')
-        if file_exists(f'{TMPDIR}/bob_public_key.pem') == True:
+        if os.path.exists(f'{TMPDIR}/bob_public_key.pem') == True:
             logging.info(f"Connection succeeded with [{HOST}] on port [{PORT}]")
             logging.info("Received [bob_public_key.pem]")
             Thread(target = encryptSkcKey).start()
             break
 
-    while file_exists(f'{TMPDIR}/files_received') == False:
+    while os.path.exists(f'{TMPDIR}/files_received') == False:
         # Write FILE name to file_name
         with open(f'{TMPDIR}/file_name', 'w') as file:
             file.write(f'{FILE}\n')   
@@ -196,7 +196,7 @@ def connection(): # Upload files, download bob_public_key
         # Request confirmation Bob received files
         files_rcv = f'{TMPDIR}/files_received'
         client.download(files_rcv, files_rcv)
-        if file_exists(files_rcv) == True:
+        if os.path.exists(files_rcv) == True:
             logging.info("Uploaded [alice_public_key.pem]")
             logging.info(f"Uploaded [{FILE}.sig], [{FILE}.encrypted], [key.encrypted]")
             logging.info("Bob received files")
@@ -247,7 +247,6 @@ if __name__ == '__main__':
     import argparse
     from time import sleep
     from threading import Thread
-    from os.path import exists as file_exists
 
     # Define argument parser for easier utilization
     parser = argparse.ArgumentParser(description="Encrypted File Sender")
