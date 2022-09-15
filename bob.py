@@ -226,13 +226,11 @@ def mkdir():
 def rmfiles():
     from shutil import rmtree
     # Remove rmdir recursively, with temporary files inside
-    RMFILES = input("[*] Would you like to remove temporary files? [Yes/No] ")
-    if RMFILES == "Yes" or RMFILES == "y" or RMFILES == "":
+    if SAVE_FILES == False:
         rmtree(TMPDIR)
         logging.info("Temporary files removed")
     else:
         logging.info("Temporary files not removed")
-    raise SystemExit
 
 def logger():
     # Logger
@@ -255,6 +253,7 @@ if __name__ == '__main__':
     import os
     import logging
     import argparse
+    from tqdm import tqdm
     from time import sleep
     from threading import Thread
 
@@ -263,32 +262,32 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--port", help="Port to use, default is 5001", default=5001)
     parser.add_argument("-d", "--dir", help="Directory to store temporary files, default is tmp/", default="tmp/")
     parser.add_argument("-l", "--log", help="Enable debugging", action='store_true')
+    parser.add_argument("-s", "--save", help="Save temporary files", action="store_true", default="store_false")
     args = parser.parse_args()
 
     # Define global variables
     TMPDIR = args.dir
     SERVER_PORT = args.port
     LOG = args.log
+    SAVE_FILES = args.save
 
     logger()
 
+    print("Establishing connection ...")
     mkdir()
     genPkcKey()
     loadBobPrivateKey()
     s = Server()
     Thread(target = s.establishConnection).start()
-    while True: 
-        if os.path.exists(TMPDIR + "key.encrypted") == True:
+    while os.path.exists(f'{TMPDIR}/key.encrypted') == False: 
+        if os.path.exists(f'{TMPDIR}/key.encrypted') == True:
+            # print("Decrypting file ... ")
             sleep(.1)
-            decryptSkcKey()
-            loadSkcKey()
-            decryptFile()
-            genHash()
             v = Verify()
-            v.loadAlPublicKey()
-            v.loadHashSig()
-            v.verification()
-            s.connectionSuccessful()
-            rmfiles()
+            myfunctions = [ decryptSkcKey, loadSkcKey, decryptFile, genHash, v.loadAlPublicKey, v.loadHashSig, v.verification, s.connectionSuccessful, rmfiles ] 
+
+            for i in tqdm(myfunctions):
+                i()
+                sleep(1)
         else:
             pass

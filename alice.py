@@ -30,7 +30,7 @@ def genPkcKey():
     with open(f'{TMPDIR}/alice_public_key.pem', 'wb') as f:
         f.write(public_pem)
 
-    logging.warning(f"Public and private keys stored as [alice_public/private_key]")
+    logging.info(f"Public and private keys stored as [alice_public/private_key]")
 
 class Fernet:
     def __init__(self, Fernet):
@@ -215,13 +215,11 @@ def mkdir():
 def rmfiles():
     # Remove rmdir recursively, with temporary files inside
     from shutil import rmtree
-    RMFILES = input("[*] Would you like to remove temporary files? [Yes/No] ")
-    if RMFILES == "Yes" or RMFILES == "y" or RMFILES == "":
+    if SAVE_FILES == False:
         rmtree(TMPDIR)
         logging.info("Temporary files removed")
     else:
         logging.info("Temporary files not removed")
-    raise SystemExit
 
 def logger():
     # Logger
@@ -245,6 +243,7 @@ if __name__ == '__main__':
     import os
     import logging
     import argparse
+    from tqdm import tqdm
     from time import sleep
     from threading import Thread
 
@@ -255,6 +254,7 @@ if __name__ == '__main__':
     parser.add_argument("-p", "--port", help="Port to use, default is 5001", default=5001)
     parser.add_argument("-d", "--directory", help="Directory to store temporary files, default is tmp/", default="tmp/")
     parser.add_argument("-l", "--log", help="Enable debugging", action='store_true')
+    parser.add_argument("-s", "--save", help="Save temporary files", action="store_true", default="store_false")
     args = parser.parse_args()
 
     # Define global variables
@@ -263,19 +263,17 @@ if __name__ == '__main__':
     PORT = args.port
     TMPDIR = args.directory
     LOG = args.log
+    SAVE_FILES = args.save
 
     logger()
 
-    mkdir()
-    genPkcKey()
     f = Fernet(Fernet)
-    f.genSkcKey()
-    genHash()
-    f.encryptFile()
     e = EncryptHash()
-    e.loadAlPrivateKey()
-    e.signHash()
-    establishConnection()
-    connection()
-    connectionSuccessful()
-    rmfiles()
+
+    myfunctions = [ mkdir, genPkcKey, f.genSkcKey, genHash, f.encryptFile, e.loadAlPrivateKey, e.signHash, establishConnection, connection, connectionSuccessful, rmfiles ]
+
+    for i in tqdm(myfunctions):
+        i()
+        sleep(1)
+        if i == "rmfiles":
+            raise SystemExit
