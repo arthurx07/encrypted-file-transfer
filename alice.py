@@ -55,10 +55,10 @@ class Fernet:
             # Encrypt data
             encrypted_data = f.encrypt(file_data)
             # Write the encrypted file
-            with open(f'{TMPDIR}/{FILE}.encrypted', 'wb') as file:
+            with open(f'{TMPDIR}/{FILE_CLEAN}.encrypted', 'wb') as file:
                 file.write(encrypted_data)
 
-        logging.info(f"[{FILE}.encrypted] encrypted with session key")
+        logging.info(f"[{FILE_CLEAN}.encrypted] encrypted with session key")
 
 def genHash(): # Generate hash from file
     from hashlib import blake2b
@@ -77,10 +77,10 @@ def genHash(): # Generate hash from file
     hash_data = '{0}'.format(blake2.hexdigest())
 
     # Write hash to file.blake2b
-    with open(f'{TMPDIR}/{FILE}.blake2b', 'w') as hash_file:
+    with open(f'{TMPDIR}/{FILE_CLEAN}.blake2b', 'w') as hash_file:
         hash_file.write(hash_data)
 
-    logging.info(f"Hash generated from [{FILE}] and written to [{FILE}.blake2b]")
+    logging.info(f"Hash generated from [{FILE_CLEAN}] and written to [{FILE_CLEAN}.blake2b]")
 
 class EncryptHash: # Encrypt hash w/ alice private key (signs file)
     def loadAlPrivateKey(self): # Load alice private key
@@ -97,10 +97,10 @@ class EncryptHash: # Encrypt hash w/ alice private key (signs file)
 
     def signHash(self): # Sign hash 
         # Load contents of file.blake2b
-        with open(f'{TMPDIR}/{FILE}.blake2b', 'rb') as f:
+        with open(f'{TMPDIR}/{FILE_CLEAN}.blake2b', 'rb') as f:
             payload = f.read()
         
-        logging.info(f"Loaded [{FILE}.blake2b]")
+        logging.info(f"Loaded [{FILE_CLEAN}.blake2b]")
 
         # Sign the payload file to file.sig
         from cryptography.hazmat.primitives import hashes
@@ -116,10 +116,10 @@ class EncryptHash: # Encrypt hash w/ alice private key (signs file)
                 hashes.SHA256(),
                 )
             )
-        with open(f'{TMPDIR}/{FILE}.sig', 'wb') as f:
+        with open(f'{TMPDIR}/{FILE_CLEAN}.sig', 'wb') as f:
             f.write(signature)
 
-        logging.info(f"[{FILE}.blake2b] file signed with private key to [{FILE}.sig]")
+        logging.info(f"[{FILE_CLEAN}.blake2b] file signed with private key to [{FILE_CLEAN}.sig]")
 
 
 def loadBobPublicKey(): # Load bob public key 
@@ -185,11 +185,11 @@ def connection(): # Upload files, download bob_public_key
     while os.path.exists(f'{TMPDIR}/files_received') == False:
         # Write FILE name to file_name
         with open(f'{TMPDIR}/file_name', 'w') as file:
-            file.write(f'{FILE}\n')   
+            file.write(f'{FILE_CLEAN}\n')   
 
         # Upload alice's public key, file, hash, session key
         # Initiates a tftp upload to the configured remote host, uploading the filename passed.
-        for name in (f'{TMPDIR}/file_name', f'{TMPDIR}/alice_public_key.pem', f'{TMPDIR}/{FILE}.sig', f'{TMPDIR}/{FILE}.encrypted', f'{TMPDIR}/key.encrypted'):
+        for name in (f'{TMPDIR}/file_name', f'{TMPDIR}/alice_public_key.pem', f'{TMPDIR}/{FILE_CLEAN}.sig', f'{TMPDIR}/{FILE_CLEAN}.encrypted', f'{TMPDIR}/key.encrypted'):
             client.upload(name, name)
 
         sleep(.1)
@@ -198,7 +198,7 @@ def connection(): # Upload files, download bob_public_key
         client.download(files_rcv, files_rcv)
         if os.path.exists(files_rcv) == True:
             logging.info("Uploaded [alice_public_key.pem]")
-            logging.info(f"Uploaded [{FILE}.sig], [{FILE}.encrypted], [key.encrypted]")
+            logging.info(f"Uploaded [{FILE_CLEAN}.sig], [{FILE_CLEAN}.encrypted], [key.encrypted]")
             logging.info("Bob received files")
             break
         else:
@@ -259,6 +259,7 @@ if __name__ == '__main__':
 
     # Define global variables
     FILE = args.file
+    d, FILE_CLEAN = os.path.split(f'{FILE}')
     HOST = args.host
     PORT = args.port
     TMPDIR = args.directory
