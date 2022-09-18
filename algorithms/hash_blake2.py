@@ -11,8 +11,8 @@ BUF_SIZE = 65536  # lets read stuff in 64kb chunks!
 
 blake2 = blake2b()
 
-#usage: ./hash_blake2.py file ///change sys.argv[1] if wanted
-with open(file, 'rb') as f:
+# usage: ./hash_blake2.py file ///change sys.argv[1] if wanted
+with open(file, "rb") as f:
     while True:
         data = f.read(BUF_SIZE)
         if not data:
