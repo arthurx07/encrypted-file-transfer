@@ -39,7 +39,7 @@ class Server:
         import tftpy
 
         # Device's IP address
-        SERVER_HOST = (
+        server_host = (
             "0.0.0.0"  # means all ipv4 addresses that are on the local machine
         )
         # SERVER_PORT (defined as global variable)
@@ -47,7 +47,7 @@ class Server:
         # Get local and public ip
         import socket
 
-        LOCAL_IP = (
+        local_ip = (
             (
                 [
                     ip
@@ -72,13 +72,13 @@ class Server:
         # Create tftpy server
         self.server = tftpy.TftpServer(".")
         logging.warning(
-            f"Creat servidor tftp amb host a {LOCAL_IP} i el port a {SERVER_PORT}"
+            f"Creat servidor tftp amb host a {local_ip} i el port a {SERVER_PORT}"
         )
 
         # Server waiting for receiving files
         logging.info("Listening, waiting for other devices to connect and send files")
         Thread(target=s.connection).start()
-        self.server.listen(SERVER_HOST, SERVER_PORT)
+        self.server.listen(server_host, SERVER_PORT)
 
     def connection(self):
         global FILE
@@ -256,8 +256,7 @@ class Verify:  # Bob verifies file (decrypts hash, generates hash from file (bef
                 hashes.SHA256(),
             )
             logging.info(f"[{FILE}] verification succeeded")
-        except InvalidSignature as e:
-            logging.error(e.message, e.args)
+        except InvalidSignature:
             logging.error("Payload and/or signature files failed verification!")
 
 
