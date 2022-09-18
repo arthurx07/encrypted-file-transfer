@@ -11,9 +11,9 @@ def gen_pkc_key():
     )
     al_public_key = private_key.public_key()
 
-    logging.info("Public and private keys generated")
+    logging.info("S'han generat les claus públiques i privades")
 
-    # Store alice's keys
+    # Emmagatzemar les claus
     from cryptography.hazmat.primitives import serialization
 
     private_pem = private_key.private_bytes(
@@ -31,7 +31,7 @@ def gen_pkc_key():
     with open(f"{TMPDIR}/alice_public_key.pem", "wb") as file:
         file.write(public_pem)
 
-    logging.info("Public and private keys stored as [alice_public/private_key]")
+    logging.info("Claus públiques i privades emmagatzemades com a [alice_public/private_key]")
 
 
 class Fernet:
@@ -39,37 +39,37 @@ class Fernet:
         self.Fernet = fernet
 
     def gen_skc_key(self):
-        # Generate skc key and save
+        # Generar una clau skc i emmagatzemar-la
         from cryptography.fernet import Fernet
 
         self.key = Fernet.generate_key()
         with open(f"{TMPDIR}/key.key", "wb") as key_file:
             key_file.write(self.key)
 
-        logging.info("Random session key generated and stored as [key.key]")
+        logging.info("Clau de sessió aleatòria (skc) generada i emmagatzemada com a [key.key]")
 
-    def encrypt_file(self):  # Encrypte file with session key
+    def encrypt_file(self):  # Encriptació de l'arxiu amb la clau skc
         from cryptography.fernet import Fernet
 
         # Given a filename (str) and key (bites), it encrypts the file and writes it
         f_encrypt = Fernet(self.key)
         with open(FILE, "rb") as file:
-            # Read all file data
+            # Llegir les dades de l'arxiu
             file_data = file.read()
-            # Encrypt data
+            # Xifrar les dades
             encrypted_data = f_encrypt.encrypt(file_data)
-            # Write the encrypted file
+            # Emmagatzemar l'arxiu encriptat
             with open(f"{TMPDIR}/{FILE_CLEAN}.encrypted", "wb") as file_encrypted:
                 file_encrypted.write(encrypted_data)
 
-        logging.info(f"[{FILE_CLEAN}.encrypted] encrypted with session key")
+        logging.info(f"[{FILE_CLEAN}.encrypted] xifrat amb la clau de sessió")
 
 
-def gen_hash():  # Generate hash from file
+def gen_hash():  # Generar hash de l'arxiu
     from hashlib import blake2b
 
-    # Divide files in chunks, to not use a lot of ram for big files
-    buf_size = 65536  # Read in 64kb chunks // buf_size is totally arbitrary
+    # Dividiu els fitxers en parts, per no utilitzar molta memòria RAM en fitxers grans
+    buf_size = 65536  # Llegir en trossos de 64 kb // buf_size és totalment arbitrària
 
     blake2 = blake2b()
 
@@ -87,12 +87,12 @@ def gen_hash():  # Generate hash from file
         hash_file.write(hash_data)
 
     logging.info(
-        f"Hash generated from [{FILE_CLEAN}] and written to [{FILE_CLEAN}.blake2b]"
+        f"Hash generat de l'arxiu [{FILE_CLEAN}] i emmagatzemat com a [{FILE_CLEAN}.blake2b]"
     )
 
 
-class EncryptHash:  # Encrypt hash w/ alice private key (signs file)
-    def load_al_private_key(self):  # Load alice private key
+class EncryptHash:  # Xifrar hash amb la clau privada d'Alice (signar-lo)
+    def load_al_private_key(self):  # Carregar la clau privada d'Alice
         from cryptography.hazmat.backends import default_backend
         from cryptography.hazmat.primitives import serialization
 
@@ -101,19 +101,19 @@ class EncryptHash:  # Encrypt hash w/ alice private key (signs file)
                 key_file.read(), password=None, backend=default_backend()
             )
 
-        logging.info("Loaded [alice_private_key.pem]")
+        logging.info("Fitxer [alice_private_key.pem] carregat")
 
-    def sign_hash(self):  # Sign hash
-        # Load contents of file.blake2b
+    def sign_hash(self):  # Signar hash
+        # Càrrega dels continguts de file.blake2b
         with open(f"{TMPDIR}/{FILE_CLEAN}.blake2b", "rb") as file:
             payload = file.read()
 
-        logging.info(f"Loaded [{FILE_CLEAN}.blake2b]")
+        logging.info(f"Arxiu [{FILE_CLEAN}.blake2b] carregat")
 
-        # Sign the payload file to file.sig
+        # Signar l'arxiu file.blakeb a file.sig 
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.asymmetric import padding
-        import base64  # For base64 encoding
+        import base64  # Per a la codificació a base64
 
         signature = base64.b64encode(
             self.private_key.sign(
@@ -129,11 +129,11 @@ class EncryptHash:  # Encrypt hash w/ alice private key (signs file)
             file.write(signature)
 
         logging.info(
-            f"[{FILE_CLEAN}.blake2b] file signed with private key to [{FILE_CLEAN}.sig]"
+            f"Arxiu [{FILE_CLEAN}.blake2b] signat amb la clau privada com a [{FILE_CLEAN}.sig]"
         )
 
 
-def load_bob_public_key():  # Load bob public key
+def load_bob_public_key():  # Càrrega de bob public key
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import serialization
 
@@ -143,22 +143,22 @@ def load_bob_public_key():  # Load bob public key
             key_file.read(), backend=default_backend()
         )
 
-    logging.info("Loaded [bob_public_key.pem]")
+    logging.info("Fitxer [bob_public_key.pem] carregat")
 
 
-def encrypt_skc_key():  # Encrypt key.key
+def encrypt_skc_key():  # Encriptar key.key
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import padding
 
     load_bob_public_key()
 
-    # Save key contents as bytes in message variable
+    # Desar el contingut de la clau com a bytes a la variable message
     with open(f"{TMPDIR}/key.key", "rb") as file:
         message = file.read()
 
-    logging.info("Loaded [key.key] to be later encrypted")
+    logging.info("Carregat l'arxiu [key.key] per a la seva encriptació")
 
-    # Encrypt key
+    # Xifrar la clau
     global bob_public_key
     encrypted = bob_public_key.encrypt(
         message,
@@ -169,40 +169,40 @@ def encrypt_skc_key():  # Encrypt key.key
         ),
     )
 
-    # Write encryption to key.encrypted
+    # Emmagatzemar key.key xifrat com a key.encrypted
     with open(f"{TMPDIR}/key.encrypted", "wb") as file:
         file.write(encrypted)
 
-    logging.info("[key.key] encrypted with [bob_public_key] as [key.encrypted]")
+    logging.info("Arxiu [key.key] xifrat amb [bob_public_key] com a [key.encrypted]")
 
 
-def establish_connection():  # Create tftpy client
+def establish_connection():  # Crear un client tftpy
     import tftpy
 
     global client
     client = tftpy.TftpClient(HOST, PORT)
-    logging.info(f"Started connnection with [{HOST}] on port [{PORT}]")
+    logging.info(f"Iniciada la connexió amb [{HOST}] al port [{PORT}]")
     return client
 
 
-def connection():  # Upload files, download bob_public_key
+def connection():  # Pujar arxius, descarregar bob_public_key
     global client
     while os.path.exists(f"{TMPDIR}/key.encrypted") is False:
-        # Download bob's public key
+        # Descarregar bob public key
         # Initiates a tftp download from the configured remote host, requesting the filename passed
         client.download(f"{TMPDIR}/bob_public_key.pem", f"{TMPDIR}/bob_public_key.pem")
         if os.path.exists(f"{TMPDIR}/bob_public_key.pem") is True:
-            logging.info(f"Connection succeeded with [{HOST}] on port [{PORT}]")
-            logging.info("Received [bob_public_key.pem]")
+            logging.info(f"Connexió amb éxit amb [{HOST}] al port [{PORT}]")
+            logging.info("[bob_public_key.pem] rebut")
             Thread(target=encrypt_skc_key).start()
             break
 
     while os.path.exists(f"{TMPDIR}/files_received") is False:
-        # Write FILE name to file_name
+        # Escriure el nom de l'arxiu al fitxer file_name
         with open(f"{TMPDIR}/file_name", "w") as file:
             file.write(f"{FILE_CLEAN}\n")
 
-        # Upload alice's public key, file, hash, session key
+        # Pujar alice_public_key, l'arxiu encriptat, el hash signat i la clau de sessió xifrada
         # Initiates a tftp upload to the configured remote host, uploading the filename passed.
         for name in (
             f"{TMPDIR}/file_name",
@@ -214,43 +214,43 @@ def connection():  # Upload files, download bob_public_key
             client.upload(name, name)
 
         sleep(0.1)
-        # Request confirmation Bob received files
+        # Sol·licitar la confirmació que Bob ha rebut els fitxers
         files_rcv = f"{TMPDIR}/files_received"
         client.download(files_rcv, files_rcv)
         if os.path.exists(files_rcv) is True:
-            logging.info("Uploaded [alice_public_key.pem]")
+            logging.info("Pujat [alice_public_key.pem]")
             logging.info(
-                f"Uploaded [{FILE_CLEAN}.sig], [{FILE_CLEAN}.encrypted], [key.encrypted]"
+                f"Pujat [{FILE_CLEAN}.sig], [{FILE_CLEAN}.encrypted], [key.encrypted]"
             )
-            logging.info("Bob received files")
+            logging.info("Bob ha rebut els fitxers")
             break
         else:
             sleep(0.5)
 
 
 def connection_successful():
-    logging.info("Finished connection")
+    logging.info("Connexió finalitzada")
 
 
 def mkdir():
-    # Create tmpdir
+    # Creació del directori temporal (tmpdir)
     if os.path.isdir(TMPDIR) is False:
         os.mkdir(TMPDIR)
 
 
 def rmfiles():
-    # Remove rmdir recursively, with temporary files inside
+    # Eliminar rmdir de forma recursiva, incloent els fitxers temporals de l'interior
     from shutil import rmtree
 
     if SAVE_FILES is False:
         rmtree(TMPDIR)
-        logging.info("Temporary files removed")
+        logging.info("Fitxers temporals suprimits")
     else:
-        logging.info("Temporary files not removed")
+        logging.info("Fitxers temporals no suprimits")
 
 
 def logger():
-    # Logger
+    # Enregistrador
     if LOG is True:
         logging.root.handlers = []
         logging.basicConfig(
@@ -259,10 +259,10 @@ def logger():
             filename="%slog" % __file__[:-2],
         )
 
-        # Set up logging to console
+        # Configura el registre a la consola
         ch = logging.StreamHandler()
         ch.setLevel(logging.WARNING)
-        # Set a format which is simpler for console use
+        # Estableix un format que sigui més senzill per a la visualització a la consola
         formatter = logging.Formatter("%(asctime)s [%(levelname)-4.4s]  %(message)s")
         ch.setFormatter(formatter)
         logging.getLogger("").addHandler(ch)
@@ -271,7 +271,7 @@ def logger():
 
 
 if __name__ == "__main__":
-    # Imports
+    # Importacions
     import os
     import logging
     import argparse
@@ -279,7 +279,7 @@ if __name__ == "__main__":
     from time import sleep
     from threading import Thread
 
-    # Define argument parser for easier utilization
+    # Definir un analitzador d'arguments per a una utilització més fàcil del programari
     parser = argparse.ArgumentParser(description="Encrypted File Sender")
     parser.add_argument("file", help="File name to send")
     parser.add_argument("host", help="The host/IP address of the receiver")
@@ -298,7 +298,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # Define global variables
+    # Definir les variables globals (constants)
     FILE = args.file
     d, FILE_CLEAN = os.path.split(f"{FILE}")
     HOST = args.host
@@ -312,6 +312,7 @@ if __name__ == "__main__":
     f = Fernet(Fernet)
     e = EncryptHash()
 
+    # Cridar les functions
     myfunctions = [
         mkdir,
         gen_pkc_key,
@@ -326,6 +327,7 @@ if __name__ == "__main__":
         rmfiles,
     ]
 
+    # Configuració de la barra de progrés
     for i in tqdm(myfunctions):
         i()
         sleep(0.1)
