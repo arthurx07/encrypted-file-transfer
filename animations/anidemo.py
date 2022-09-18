@@ -1,5 +1,6 @@
 #!/bin/env python
 from time import sleep
+
 from tqdm import tqdm
 
 a = 0

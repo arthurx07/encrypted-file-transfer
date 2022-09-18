@@ -1,7 +1,7 @@
 #!/bin/env python
 
 
-def genPkcKey():
+def gen_pkc_key():
     # Generate bob's key
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives.asymmetric import rsa
@@ -35,7 +35,7 @@ def genPkcKey():
 
 
 class Server:
-    def establishConnection(self):  # Bob establishes a connection with alice
+    def establish_connection(self):  # Bob establishes a connection with alice
         import tftpy
 
         # Device's IP address
@@ -104,14 +104,14 @@ class Server:
                 )
                 break
 
-    def connectionSuccessful(self):
+    def connection_successful(self):
         if os.path.exists(FILE) is True:
             logging.info(f"[{FILE}] received successfully")
         logging.info("Finished connection")
         self.server.stop()
 
 
-def loadBobPrivateKey():  # Loads bob private key
+def load_bob_private_key():  # Loads bob private key
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.backends import default_backend
 
@@ -125,7 +125,7 @@ def loadBobPrivateKey():  # Loads bob private key
     logging.info("Loaded [bob_private_key.pem]")
 
 
-def decryptSkcKey():  # Decrypt session key
+def decrypt_skc_key():  # Decrypt session key
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import padding
 
@@ -153,7 +153,7 @@ def decryptSkcKey():  # Decrypt session key
     logging.info("Decrypted [key.encrypted] and written into [key.key]")
 
 
-def loadSkcKey():  # Loads the key from the current directory named `key.key`
+def load_skc_key():  # Loads the key from the current directory named `key.key`
     global key
     with open(f"{TMPDIR}/key.key", "rb") as f:
         key = f.read()
@@ -161,7 +161,7 @@ def loadSkcKey():  # Loads the key from the current directory named `key.key`
     logging.info("Loaded [key.key]")
 
 
-def decryptFile():  # Bob decrypts file w/ session key
+def decrypt_file():  # Bob decrypts file w/ session key
     # Given a filename (str) and key (bytes), it decripts the file and write it
     from cryptography.fernet import Fernet
 
@@ -185,27 +185,27 @@ def decryptFile():  # Bob decrypts file w/ session key
     logging.info(f"[{FILE}] decrypted and stored")
 
 
-def genHash():  # Bob generates blake2b hash from blake2b.encrypted
+def gen_hash():  # Bob generates blake2b hash from blake2b.encrypted
     global FILE
     from hashlib import blake2b
 
     # Divide files in chunks, to not use a lot of ram for big files
-    BUF_SIZE = 65536  # Read in 64kb chunks // BUF_SIZE is totally arbitrary
+    buf_size = 65536  # Read in 64kb chunks // buf_size is totally arbitrary
 
     blake2 = blake2b()
 
     with open(FILE, "rb") as f:
         while True:
-            data = f.read(BUF_SIZE)
+            data = f.read(buf_size)
             if not data:
                 break
             blake2.update(data)
 
-    HASH = "{0}".format(blake2.hexdigest())
+    hash_blake2 = "{0}".format(blake2.hexdigest())
 
     # Write hash to file
     with open(f"{TMPDIR}/{FILE}.blake2b", "w") as hash_file:
-        hash_file.write(HASH)
+        hash_file.write(hash_blake2)
 
     logging.info(f"Hash generated from [{FILE}] and written to [{FILE}.blake2b]")
 
@@ -218,7 +218,7 @@ class Verify:  # Bob verifies file (decrypts hash, generates hash from file (bef
         self.payload_contents = None
         self.signature = None
 
-    def loadAlPublicKey(self):
+    def load_al_public_key(self):
         from cryptography.hazmat.primitives.serialization import load_pem_public_key
         from cryptography.hazmat.backends import default_backend
 
@@ -228,7 +228,7 @@ class Verify:  # Bob verifies file (decrypts hash, generates hash from file (bef
 
         logging.info("Loaded [alice_public_key.pem]")
 
-    def loadHashSig(self):
+    def load_hash_sig(self):
         import base64  # for base64 decoding
 
         # Load the payload contents and the signature.
@@ -379,10 +379,10 @@ if __name__ == "__main__":
     logger()
 
     mkdir()
-    genPkcKey()
-    loadBobPrivateKey()
+    gen_pkc_key()
+    load_bob_private_key()
     s = Server()
-    Thread(target=s.establishConnection).start()
+    Thread(target=s.establish_connection).start()
     sleep(0.1)
     loader = Loader("[*] Establint connexió...", "").start()
     while True:
@@ -394,14 +394,14 @@ if __name__ == "__main__":
             sleep(0.1)
             v = Verify()
             myfunctions = [
-                decryptSkcKey,
-                loadSkcKey,
-                decryptFile,
-                genHash,
-                v.loadAlPublicKey,
-                v.loadHashSig,
+                decrypt_skc_key,
+                load_skc_key,
+                decrypt_file,
+                gen_hash,
+                v.load_al_public_key,
+                v.load_hash_sig,
                 v.verification,
-                s.connectionSuccessful,
+                s.connection_successful,
                 rmfiles,
             ]
 

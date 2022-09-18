@@ -1,4 +1,7 @@
-import sys, time, threading
+import sys
+import threading
+import time
+
 
 # Here is an example of the process function:
 

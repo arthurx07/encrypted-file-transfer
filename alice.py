@@ -1,7 +1,7 @@
 #!/bin/env python
 
 
-def genPkcKey():
+def gen_pkc_key():
     # Generate alice's key
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives.asymmetric import rsa
@@ -21,24 +21,24 @@ def genPkcKey():
         format=serialization.PrivateFormat.PKCS8,
         encryption_algorithm=serialization.NoEncryption(),
     )
-    with open(f"{TMPDIR}/alice_private_key.pem", "wb") as f:
-        f.write(private_pem)
+    with open(f"{TMPDIR}/alice_private_key.pem", "wb") as file:
+        file.write(private_pem)
 
     public_pem = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo,
     )
-    with open(f"{TMPDIR}/alice_public_key.pem", "wb") as f:
-        f.write(public_pem)
+    with open(f"{TMPDIR}/alice_public_key.pem", "wb") as file:
+        file.write(public_pem)
 
     logging.info("Public and private keys stored as [alice_public/private_key]")
 
 
 class Fernet:
-    def __init__(self, Fernet):
-        self.Fernet = Fernet
+    def __init__(self, fernet):
+        self.Fernet = fernet
 
-    def genSkcKey(self):
+    def gen_skc_key(self):
         # Generate skc key and save
         from cryptography.fernet import Fernet
 
@@ -48,34 +48,34 @@ class Fernet:
 
         logging.info("Random session key generated and stored as [key.key]")
 
-    def encryptFile(self):  # Encrypte file with session key
+    def encrypt_file(self):  # Encrypte file with session key
         from cryptography.fernet import Fernet
 
         # Given a filename (str) and key (bites), it encrypts the file and writes it
-        f = Fernet(self.key)
+        f_encrypt = Fernet(self.key)
         with open(FILE, "rb") as file:
             # Read all file data
             file_data = file.read()
             # Encrypt data
-            encrypted_data = f.encrypt(file_data)
+            encrypted_data = f_encrypt.encrypt(file_data)
             # Write the encrypted file
-            with open(f"{TMPDIR}/{FILE_CLEAN}.encrypted", "wb") as file:
-                file.write(encrypted_data)
+            with open(f"{TMPDIR}/{FILE_CLEAN}.encrypted", "wb") as file_encrypted:
+                file_encrypted.write(encrypted_data)
 
         logging.info(f"[{FILE_CLEAN}.encrypted] encrypted with session key")
 
 
-def genHash():  # Generate hash from file
+def gen_hash():  # Generate hash from file
     from hashlib import blake2b
 
     # Divide files in chunks, to not use a lot of ram for big files
-    BUF_SIZE = 65536  # Read in 64kb chunks // BUF_SIZE is totally arbitrary
+    buf_size = 65536  # Read in 64kb chunks // buf_size is totally arbitrary
 
     blake2 = blake2b()
 
-    with open(FILE, "rb") as f:
+    with open(FILE, "rb") as file:
         while True:
-            data = f.read(BUF_SIZE)
+            data = file.read(buf_size)
             if not data:
                 break
             blake2.update(data)
@@ -92,7 +92,7 @@ def genHash():  # Generate hash from file
 
 
 class EncryptHash:  # Encrypt hash w/ alice private key (signs file)
-    def loadAlPrivateKey(self):  # Load alice private key
+    def load_al_private_key(self):  # Load alice private key
         from cryptography.hazmat.backends import default_backend
         from cryptography.hazmat.primitives import serialization
 
@@ -103,10 +103,10 @@ class EncryptHash:  # Encrypt hash w/ alice private key (signs file)
 
         logging.info("Loaded [alice_private_key.pem]")
 
-    def signHash(self):  # Sign hash
+    def sign_hash(self):  # Sign hash
         # Load contents of file.blake2b
-        with open(f"{TMPDIR}/{FILE_CLEAN}.blake2b", "rb") as f:
-            payload = f.read()
+        with open(f"{TMPDIR}/{FILE_CLEAN}.blake2b", "rb") as file:
+            payload = file.read()
 
         logging.info(f"Loaded [{FILE_CLEAN}.blake2b]")
 
@@ -125,15 +125,15 @@ class EncryptHash:  # Encrypt hash w/ alice private key (signs file)
                 hashes.SHA256(),
             )
         )
-        with open(f"{TMPDIR}/{FILE_CLEAN}.sig", "wb") as f:
-            f.write(signature)
+        with open(f"{TMPDIR}/{FILE_CLEAN}.sig", "wb") as file:
+            file.write(signature)
 
         logging.info(
             f"[{FILE_CLEAN}.blake2b] file signed with private key to [{FILE_CLEAN}.sig]"
         )
 
 
-def loadBobPublicKey():  # Load bob public key
+def load_bob_public_key():  # Load bob public key
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives import serialization
 
@@ -146,15 +146,15 @@ def loadBobPublicKey():  # Load bob public key
     logging.info("Loaded [bob_public_key.pem]")
 
 
-def encryptSkcKey():  # Encrypt key.key
+def encrypt_skc_key():  # Encrypt key.key
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import padding
 
-    loadBobPublicKey()
+    load_bob_public_key()
 
     # Save key contents as bytes in message variable
-    with open(f"{TMPDIR}/key.key", "rb") as f:
-        message = f.read()
+    with open(f"{TMPDIR}/key.key", "rb") as file:
+        message = file.read()
 
     logging.info("Loaded [key.key] to be later encrypted")
 
@@ -170,13 +170,13 @@ def encryptSkcKey():  # Encrypt key.key
     )
 
     # Write encryption to key.encrypted
-    with open(f"{TMPDIR}/key.encrypted", "wb") as f:
-        f.write(encrypted)
+    with open(f"{TMPDIR}/key.encrypted", "wb") as file:
+        file.write(encrypted)
 
     logging.info("[key.key] encrypted with [bob_public_key] as [key.encrypted]")
 
 
-def establishConnection():  # Create tftpy client
+def establish_connection():  # Create tftpy client
     import tftpy
 
     global client
@@ -194,7 +194,7 @@ def connection():  # Upload files, download bob_public_key
         if os.path.exists(f"{TMPDIR}/bob_public_key.pem") is True:
             logging.info(f"Connection succeeded with [{HOST}] on port [{PORT}]")
             logging.info("Received [bob_public_key.pem]")
-            Thread(target=encryptSkcKey).start()
+            Thread(target=encrypt_skc_key).start()
             break
 
     while os.path.exists(f"{TMPDIR}/files_received") is False:
@@ -228,7 +228,7 @@ def connection():  # Upload files, download bob_public_key
             sleep(0.5)
 
 
-def connectionSuccessful():
+def connection_successful():
     logging.info("Finished connection")
 
 
@@ -314,15 +314,15 @@ if __name__ == "__main__":
 
     myfunctions = [
         mkdir,
-        genPkcKey,
-        f.genSkcKey,
-        genHash,
-        f.encryptFile,
-        e.loadAlPrivateKey,
-        e.signHash,
-        establishConnection,
+        gen_pkc_key,
+        f.gen_skc_key,
+        gen_hash,
+        f.encrypt_file,
+        e.load_al_private_key,
+        e.sign_hash,
+        establish_connection,
         connection,
-        connectionSuccessful,
+        connection_successful,
         rmfiles,
     ]
 

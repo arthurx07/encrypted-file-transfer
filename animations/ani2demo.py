@@ -1,6 +1,5 @@
 #!/bin/env python
 # don't know??
-from time import sleep
 from alive_progress import alive_bar
 
 a = 0

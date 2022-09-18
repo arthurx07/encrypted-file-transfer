@@ -1,7 +1,7 @@
 #!/bin/env python
 
-from sys import argv
 from hashlib import blake2b
+from sys import argv
 
 file = argv[1]
 

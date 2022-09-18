@@ -1,6 +1,5 @@
-import time
 import sys
-
+import time
 
 animation = "|/-\\"
 
