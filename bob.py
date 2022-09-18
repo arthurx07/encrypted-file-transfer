@@ -2,7 +2,7 @@
 
 
 def gen_pkc_key():
-    # Generate bob's key
+    # Generar claus públiques i privades de Bob
     from cryptography.hazmat.backends import default_backend
     from cryptography.hazmat.primitives.asymmetric import rsa
 
@@ -13,7 +13,7 @@ def gen_pkc_key():
 
     logging.info("Public and private keys generated")
 
-    # Store bob's keys
+    # Emmagatzemar les claus de Bob
     from cryptography.hazmat.primitives import serialization
 
     private_pem = private_key.private_bytes(
@@ -31,20 +31,20 @@ def gen_pkc_key():
     with open(f"{TMPDIR}/bob_public_key.pem", "wb") as f:
         f.write(public_pem)
 
-    logging.info("Public and private keys stored as [bob_public/private_key]")
+    logging.info(
+        "Claus públiques i privades emmagatzemades com a [bob_public/private_key]"
+    )
 
 
 class Server:
-    def establish_connection(self):  # Bob establishes a connection with alice
+    def establish_connection(self):  # Bob estableix una connexió amb Alice
         import tftpy
 
-        # Device's IP address
-        server_host = (
-            "0.0.0.0"  # means all ipv4 addresses that are on the local machine
-        )
-        # SERVER_PORT (defined as global variable)
+        # Adreça IP del dispositiu
+        server_host = "0.0.0.0"  # 0.0.0.0 vol dir totes les adresses ipv4 que están al dispositiu local
+        # SERVER_PORT (definit com a variable global)
 
-        # Get local and public ip
+        # Obtenir l'adreça ip pública i local
         import socket
 
         local_ip = (
@@ -64,32 +64,34 @@ class Server:
             + ["no IP found"]
         )[
             0
-        ]  # Code from https://stackoverflow.com/a/1267524
+        ]  # Code de https://stackoverflow.com/a/1267524
 
         # From requests import get
         # PUBLIC_IP = get('https://api.ipify.org').content.decode('utf8')
 
-        # Create tftpy server
+        # Crear servidor tftpy
         self.server = tftpy.TftpServer(".")
         logging.warning(
             f"Creat servidor tftp amb host a {local_ip} i el port a {SERVER_PORT}"
         )
 
         # Server waiting for receiving files
-        logging.info("Listening, waiting for other devices to connect and send files")
+        logging.info(
+            "Escoltant, esperant que altres dispositius es connectin i enviïn fitxers"
+        )
         Thread(target=s.connection).start()
         self.server.listen(server_host, SERVER_PORT)
 
     def connection(self):
         global FILE
-        # Define FILE variable from file_name contents
+        # Definir la variable FILE a prtir dels continguts de l'arxiu file_name
         while True:
             if os.path.exists(f"{TMPDIR}/file_name") is True:
                 sleep(0.1)
                 with open(f"{TMPDIR}/file_name", "r") as file:
                     FILE = file.read().rstrip()
                 break
-        # Check if received all files and send confirmation to Bob
+        # Comprovar si s'han rebut tots els arxius, enviar confirmació a Alicde
         while True:
             if (
                 os.path.exists(f"{TMPDIR}/alice_public_key.pem") is True
@@ -100,22 +102,22 @@ class Server:
                 with open(f"{TMPDIR}/files_received", "w") as file:
                     file.write("temporary file")
                 logging.info(
-                    f"Connection successful. [{FILE}] received, starting decryption."
+                    f"Connexió exitosa. [{FILE}] rebut, començant el desxifrat."
                 )
                 break
 
     def connection_successful(self):
         if os.path.exists(FILE) is True:
-            logging.info(f"[{FILE}] received successfully")
-        logging.info("Finished connection")
+            logging.info(f"[{FILE}] rebut satisfactòriament")
+        logging.info("Connexió finalitzada")
         self.server.stop()
 
 
-def load_bob_private_key():  # Loads bob private key
+def load_bob_private_key():  # Càrrega de la clau privada de Bob
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.backends import default_backend
 
-    # Load bob private key
+    # Carregar bob_private_key
     global private_key
     with open(f"{TMPDIR}/bob_private_key.pem", "rb") as key_file:
         private_key = serialization.load_pem_private_key(
@@ -125,7 +127,7 @@ def load_bob_private_key():  # Loads bob private key
     logging.info("Loaded [bob_private_key.pem]")
 
 
-def decrypt_skc_key():  # Decrypt session key
+def decrypt_skc_key():  # Desxifrar la clau de sessió
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.asymmetric import padding
 
@@ -137,7 +139,7 @@ def decrypt_skc_key():  # Decrypt session key
         with open(f"{TMPDIR}/key.encrypted", "rb") as f:
             encrypted = f.read()
         # if len(encrypted) == "256": # Won't print, if statement not working
-        #     logging.debug("Fully received {key.encrypted}")
+        #     logging.debug("Rebut {key.encrypted} íntegrament")
         decrypted = private_key.decrypt(
             encrypted,
             padding.OAEP(
@@ -150,18 +152,18 @@ def decrypt_skc_key():  # Decrypt session key
     with open(f"{TMPDIR}/key.key", "wb") as f:
         f.write(decrypted)
 
-    logging.info("Decrypted [key.encrypted] and written into [key.key]")
+    logging.info("Desxifrat [key.encrypted] i emmagatzemat com a [key.key]")
 
 
-def load_skc_key():  # Loads the key from the current directory named `key.key`
+def load_skc_key():  # Càrrega el fitxer del directori anomenat `key.key`
     global key
     with open(f"{TMPDIR}/key.key", "rb") as f:
         key = f.read()
 
-    logging.info("Loaded [key.key]")
+    logging.info("Carregat [key.key]")
 
 
-def decrypt_file():  # Bob decrypts file w/ session key
+def decrypt_file():  # Bob desxifra el fitxer amb la clau de sessió (skc)
     # Given a filename (str) and key (bytes), it decripts the file and write it
     from cryptography.fernet import Fernet
 
@@ -170,27 +172,27 @@ def decrypt_file():  # Bob decrypts file w/ session key
 
     f = Fernet(key)
     with open(f"{TMPDIR}/{FILE}.encrypted", "rb") as file:
-        # Read the encrypted data
+        # Llegir les dades encriptades
         encrypted_data = file.read()
 
-    logging.info(f"Loaded [{FILE}.encrypted]")
+    logging.info(f"Carregat [{FILE}.encrypted]")
 
-    # Decrypt data
+    # Desxifrar les dades
     decrypted_data = f.decrypt(encrypted_data)
 
-    # Write the original file
+    # Emmagatzemar l'arxiu original
     with open(FILE, "wb") as file:
         file.write(decrypted_data)
 
-    logging.info(f"[{FILE}] decrypted and stored")
+    logging.info(f"[{FILE}] desxifrat i emmagatzemat")
 
 
-def gen_hash():  # Bob generates blake2b hash from blake2b.encrypted
+def gen_hash():  # Bob genera un blake2b hash de l'arxiu un cop desxifrat
     global FILE
     from hashlib import blake2b
 
-    # Divide files in chunks, to not use a lot of ram for big files
-    buf_size = 65536  # Read in 64kb chunks // buf_size is totally arbitrary
+    # Dividiu els fitxers en parts, per no utilitzar molta memòria RAM en fitxers grans
+    buf_size = 65536  # Llegir en trossos de 64 kb // buf_size és totalment arbitrària
 
     blake2 = blake2b()
 
@@ -203,14 +205,14 @@ def gen_hash():  # Bob generates blake2b hash from blake2b.encrypted
 
     hash_blake2 = "{0}".format(blake2.hexdigest())
 
-    # Write hash to file
+    # Emmagatzemar el hash a un arxiu
     with open(f"{TMPDIR}/{FILE}.blake2b", "w") as hash_file:
         hash_file.write(hash_blake2)
 
-    logging.info(f"Hash generated from [{FILE}] and written to [{FILE}.blake2b]")
+    logging.info(f"Hash generat de [{FILE}] i emmagatzemat com a [{FILE}.blake2b]")
 
 
-class Verify:  # Bob verifies file (decrypts hash, generates hash from file (before), compares)
+class Verify:  # Bob verifica l'arxiu (desxifra el hash, genera un hash de l'arxiu (ja realitzat), els compara)
     global FILE
 
     def __init__(self):
@@ -222,29 +224,29 @@ class Verify:  # Bob verifies file (decrypts hash, generates hash from file (bef
         from cryptography.hazmat.primitives.serialization import load_pem_public_key
         from cryptography.hazmat.backends import default_backend
 
-        # Load the public key.
+        # Càrrega de la clau pública d'Alice
         with open(f"{TMPDIR}/alice_public_key.pem", "rb") as f:
             self.public_key = load_pem_public_key(f.read(), default_backend())
 
         logging.info("Loaded [alice_public_key.pem]")
 
     def load_hash_sig(self):
-        import base64  # for base64 decoding
+        import base64  # Per a la decodificació de base64
 
-        # Load the payload contents and the signature.
+        # Carregar els continguts del fitxer i la signatura
         with open(f"{TMPDIR}/{FILE}.blake2b", "rb") as f:
             self.payload_contents = f.read()
         with open(f"{TMPDIR}/{FILE}.sig", "rb") as f:
             self.signature = base64.b64decode(f.read())
 
-        logging.info(f"Loaded [{FILE}.blake2b] and [{FILE}.sig]")
+        logging.info(f"Carregat [{FILE}.blake2b] i [{FILE}.sig]")
 
     def verification(self):
         from cryptography.exceptions import InvalidSignature
         from cryptography.hazmat.primitives.asymmetric import padding
         from cryptography.hazmat.primitives import hashes
 
-        # Perform the verification.
+        # Duur a terme la verificació
         try:
             self.public_key.verify(
                 self.signature,
@@ -261,24 +263,24 @@ class Verify:  # Bob verifies file (decrypts hash, generates hash from file (bef
 
 
 def mkdir():
-    # Create tmpdir
+    # Creació del directori temporal (tmpdir)
     if os.path.isdir(TMPDIR) is False:
         os.mkdir(TMPDIR)
 
 
 def rmfiles():
+    # Eliminar rmdir de forma recursiva, incloent els fitxers temporals de l'interior
     from shutil import rmtree
 
-    # Remove rmdir recursively, with temporary files inside
     if SAVE_FILES is False:
         rmtree(TMPDIR)
-        logging.info("Temporary files removed")
+        logging.info("Fitxers temporals suprimits")
     else:
-        logging.info("Temporary files not removed")
+        logging.info("Fitxers temporals no suprimits")
 
 
 def logger():
-    # Logger
+    # Enregistrador
     if LOG is True:
         logging.root.handlers = []
         logging.basicConfig(
@@ -287,10 +289,10 @@ def logger():
             filename="%slog" % __file__[:-2],
         )
 
-        # Set up logging to console
+        # Configura el registre a la consola
         ch = logging.StreamHandler()
         ch.setLevel(logging.WARNING)
-        # Set a format which is simpler for console use
+        # Estableix un format que sigui més senzill per a la visualització a la consola
         formatter = logging.Formatter("%(asctime)s [%(levelname)-4.4s]  %(message)s")
         ch.setFormatter(formatter)
         logging.getLogger("").addHandler(ch)
@@ -298,7 +300,7 @@ def logger():
         logging.basicConfig(level=logging.WARNING, format="[*] %(message)s")
 
 
-class Loader:  # Small loading dots animation
+class Loader:  # Petita animació de càrrega
     def __init__(self, desc="Loading...", end="Done!", timeout=0.1):
         """
         A loader-like context manager
@@ -352,7 +354,7 @@ if __name__ == "__main__":
     from threading import Thread
     from shutil import get_terminal_size
 
-    # Define argument parser for easier utilization
+    # Definir un analitzador d'arguments per a una utilització més fàcil del programari
     parser = argparse.ArgumentParser(description="Encrypted File Receiver")
     parser.add_argument(
         "-p", "--port", help="Port to use, default is 5001", default=5001
@@ -369,7 +371,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    # Define global variables
+    # Definir les variables globals (constants)
     TMPDIR = args.dir
     SERVER_PORT = args.port
     LOG = args.log
@@ -377,13 +379,14 @@ if __name__ == "__main__":
 
     logger()
 
+    # Cridar les functions
     mkdir()
     gen_pkc_key()
     load_bob_private_key()
     s = Server()
     Thread(target=s.establish_connection).start()
     sleep(0.1)
-    loader = Loader("[*] Establint connexió...", "").start()
+    loader = Loader("[*] Establint connexió...", "").start()  # Animació de càrrega
     while True:
         if os.path.exists(f"{TMPDIR}key.encrypted") is True:
             loader.stop()
@@ -404,6 +407,7 @@ if __name__ == "__main__":
                 rmfiles,
             ]
 
+            # Configuració de la barra de progrés
             for i in tqdm(myfunctions):
                 i()
                 sleep(0.1)

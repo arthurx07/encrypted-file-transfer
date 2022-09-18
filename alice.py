@@ -31,7 +31,9 @@ def gen_pkc_key():
     with open(f"{TMPDIR}/alice_public_key.pem", "wb") as file:
         file.write(public_pem)
 
-    logging.info("Claus públiques i privades emmagatzemades com a [alice_public/private_key]")
+    logging.info(
+        "Claus públiques i privades emmagatzemades com a [alice_public/private_key]"
+    )
 
 
 class Fernet:
@@ -46,7 +48,9 @@ class Fernet:
         with open(f"{TMPDIR}/key.key", "wb") as key_file:
             key_file.write(self.key)
 
-        logging.info("Clau de sessió aleatòria (skc) generada i emmagatzemada com a [key.key]")
+        logging.info(
+            "Clau de sessió aleatòria (skc) generada i emmagatzemada com a [key.key]"
+        )
 
     def encrypt_file(self):  # Encriptació de l'arxiu amb la clau skc
         from cryptography.fernet import Fernet
@@ -110,7 +114,7 @@ class EncryptHash:  # Xifrar hash amb la clau privada d'Alice (signar-lo)
 
         logging.info(f"Arxiu [{FILE_CLEAN}.blake2b] carregat")
 
-        # Signar l'arxiu file.blakeb a file.sig 
+        # Signar l'arxiu file.blakeb a file.sig
         from cryptography.hazmat.primitives import hashes
         from cryptography.hazmat.primitives.asymmetric import padding
         import base64  # Per a la codificació a base64
