@@ -27,4 +27,4 @@ https://www.thepythoncode.com/code/send-receive-files-using-sockets-python}
 
 [ok] 0. translate to catalan (15/09/22)
 
-0. skc file tranfer, option to save key.key (no plans in short term)
+[--] 0. skc file tranfer, option to save key.key (no plans in short term)
