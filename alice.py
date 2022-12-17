@@ -292,7 +292,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "-d",
-        "--directory",
+        "--dir",
         help="Directory to store temporary files, default is tmp/",
         default="tmp/",
     )
