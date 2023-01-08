@@ -362,8 +362,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "-d",
         "--dir",
-        help="Directory to store temporary files, default is tmp/",
-        default="tmp/",
+        help="Directory to store temporary files, default is $XDG_CACHE_HOME/encrypted-file-transfer/bob",
+        default="/home/kumao/.cache/encrypted-file-transfer-bob/",
     )
     parser.add_argument("-l", "--log", help="Enable debugging", action="store_true")
     parser.add_argument(
