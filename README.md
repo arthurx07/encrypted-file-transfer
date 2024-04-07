@@ -1,4 +1,4 @@
-# Encripted File Transfer
+# Encrypted File Transfer
 Send and receive files between two devices, securely.
 
     usage: alice.py [-h] [-p PORT] [-d DIR] [-l] [-s] file host
