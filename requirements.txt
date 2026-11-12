@@ -1,4 +1,4 @@
 # python3 -m pip install -r requirements.txt
-tqdm~=4.66.3
+tqdm~=4.70.1
 cryptography~=50.0.2
 tftpy~=0.8.2
